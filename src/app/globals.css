@@ -1,0 +1,81 @@
+@import "tailwindcss";
+
+:root {
+  --bg-primary: #F8FAF9;
+  --card-bg: #FFFFFF;
+  --card-border: #E4E9E6;
+  --profit-emerald: #05C46B;
+  --profit-hover: #04A75B;
+  --emerald-mint: #E6F7F0;
+  --text-slate-dark: #1E2923;
+  --text-slate-muted: #6B7C72;
+  --loss-red: #FF4D4D;
+  --gold-luxury: #D4AF37;
+}
+
+@theme {
+  --font-montserrat: var(--font-montserrat), 'Montserrat', sans-serif;
+  --font-poppins: var(--font-poppins), 'Poppins', sans-serif;
+
+  --color-primary-bg: #F8FAF9;
+  --color-card-bg: #FFFFFF;
+  --color-card-border: #E4E9E6;
+  --color-profit: #05C46B;
+  --color-profit-hover: #04A75B;
+  --color-emerald-mint: #E6F7F0;
+  --color-slate-dark: #1E2923;
+  --color-slate-muted: #6B7C72;
+  --color-loss: #FF4D4D;
+  --color-gold: #D4AF37;
+}
+
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-slate-dark);
+  font-family: var(--font-poppins), system-ui, -apple-system, sans-serif;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-montserrat), system-ui, sans-serif;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #F1F4F2;
+}
+::-webkit-scrollbar-thumb {
+  background: #C4D0C9;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #05C46B;
+}
+
+/* Animations - Pure Opacity Fade to Prevent Fixed Modal Containing Block Clipping */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.tradewire-card {
+  background-color: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 1rem;
+  box-shadow: 0 4px 20px -2px rgba(30, 41, 35, 0.04);
+  transition: all 0.2s ease-in-out;
+}
+
+.tradewire-card:hover {
+  border-color: #D0D9D4;
+  box-shadow: 0 8px 25px -4px rgba(30, 41, 35, 0.08);
+}
