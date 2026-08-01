@@ -191,6 +191,8 @@ export default function AddFriendModal({ isOpen, onClose, onFriendAdded }: AddFr
                       <img
                         src={
                           res.avatar_url ||
+                          res.avatarUrl ||
+                          res.avatar ||
                           `https://api.dicebear.com/7.x/avataaars/svg?seed=${res.username}`
                         }
                         alt={res.username}

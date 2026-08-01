@@ -2,6 +2,8 @@ export type Language = 'id' | 'en';
 
 export type TradingStyle = 'Swing Trade' | 'Intraday' | 'Scalping';
 
+export type AccountCurrency = 'USD' | 'CENT' | 'IDR';
+
 export interface UserProfile {
   id: string;
   fullName: string;
@@ -13,6 +15,7 @@ export interface UserProfile {
   avatarUrl?: string;
   bio?: string;
   initialBalance?: number;
+  accountCurrency?: AccountCurrency;
   createdAt?: string;
 }
 
@@ -74,6 +77,7 @@ export interface LeaderboardEntry {
   winRate: number;
   totalTrades: number;
   totalPnl: number;
+  accountCurrency?: AccountCurrency;
   isFriend?: boolean;
   communityId?: string;
 }
@@ -89,4 +93,19 @@ export function isCreatorUser(username?: string): boolean {
   if (!username) return false;
   const cleanName = username.toLowerCase().replace(/[^a-z0-9]/g, '');
   return cleanName.includes('khuzaimafilla') || cleanName === 'khuzaimafilla';
+}
+
+export function formatCurrencyAmount(
+  amount: number,
+  currency: AccountCurrency = 'USD'
+): string {
+  if (currency === 'IDR') {
+    const idrVal = Math.round(amount * 15500);
+    return `Rp ${idrVal.toLocaleString('id-ID')}`;
+  }
+  if (currency === 'CENT') {
+    const centVal = Math.round(amount * 100);
+    return `${centVal.toLocaleString('en-US')} USc`;
+  }
+  return `$${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }

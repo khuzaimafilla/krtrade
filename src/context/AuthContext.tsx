@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { UserProfile, TradingStyle } from '@/types';
+import { UserProfile, TradingStyle, AccountCurrency } from '@/types';
 import { getStoredUserProfile, setStoredUserProfile } from '@/lib/storage';
 import { supabase, isSupabaseConfigured } from '@/lib/supabaseClient';
 
@@ -75,6 +75,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               avatarUrl: profile.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.username}`,
               bio: profile.bio || 'Trader aktif KRtrade Platform.',
               initialBalance: profile.initial_balance ? Number(profile.initial_balance) : 10000,
+              accountCurrency: (profile.account_currency as AccountCurrency) || 'USD',
             };
             setUser(mappedUser);
             setIsAuthenticated(true);
@@ -288,6 +289,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         avatar_url: updated.avatarUrl,
         bio: updated.bio,
         initial_balance: updated.initialBalance,
+        account_currency: updated.accountCurrency,
       }).eq('id', user.id);
     }
   };

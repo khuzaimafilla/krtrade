@@ -23,7 +23,7 @@ import {
   Award,
 } from 'lucide-react';
 import ConfirmSaveModal from '@/components/modals/ConfirmSaveModal';
-import { isCreatorUser } from '@/types';
+import { isCreatorUser, AccountCurrency } from '@/types';
 
 export default function ProfilePage() {
   const { t } = useLanguage();
@@ -34,7 +34,10 @@ export default function ProfilePage() {
   const [username, setUsername] = useState(user?.username || 'khuzaimafilla');
   const [bio, setBio] = useState(user?.bio || 'Trader konsisten KRtrade Platform. Risk management first!');
   const [initialBalance, setInitialBalance] = useState<string>(
-    (user?.initialBalance || 10000).toString()
+    (user?.initialBalance !== undefined ? user.initialBalance : 10000).toString()
+  );
+  const [accountCurrency, setAccountCurrency] = useState<AccountCurrency>(
+    user?.accountCurrency || 'USD'
   );
   const [avatarUrl, setAvatarUrl] = useState(
     user?.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.username || 'khuzaimafilla'}`
@@ -53,7 +56,7 @@ export default function ProfilePage() {
 
   const handleExecuteSave = async () => {
     const finalAvatar = pendingAvatar || avatarUrl;
-    const numBalance = parseFloat(initialBalance) || 10000;
+    const numBalance = parseFloat(initialBalance) || 0;
 
     setAvatarUrl(finalAvatar);
     await updateUser({
@@ -62,6 +65,7 @@ export default function ProfilePage() {
       username,
       bio,
       initialBalance: numBalance,
+      accountCurrency,
       avatarUrl: finalAvatar,
     });
 
@@ -207,27 +211,49 @@ export default function ProfilePage() {
               />
             </div>
 
-            {/* Custom Account Starting Balance */}
-            <div>
-              <label className="block text-xs font-bold text-[#1E2923] uppercase mb-1 flex items-center justify-between">
-                <span>Saldo Awal Trading ($)</span>
+            {/* Flexible Account Starting Balance & Currency Selection */}
+            <div className="space-y-2">
+              <label className="block text-xs font-bold text-[#1E2923] uppercase flex items-center justify-between">
+                <span>Saldo Awal Trading & Kategori Mata Uang</span>
                 <span className="text-[10px] text-[#05C46B] lowercase font-normal">
-                  (Disesuaikan Sendiri)
+                  (Bebas & Fleksibel)
                 </span>
               </label>
+
+              {/* Currency Selector Pills */}
+              <div className="grid grid-cols-3 gap-2 mb-2">
+                {(['USD', 'CENT', 'IDR'] as AccountCurrency[]).map((curr) => (
+                  <button
+                    key={curr}
+                    type="button"
+                    onClick={() => setAccountCurrency(curr)}
+                    className={`py-2 rounded-xl text-xs font-black transition-all ${
+                      accountCurrency === curr
+                        ? 'bg-[#05C46B] text-white shadow-sm'
+                        : 'bg-[#F8FAF9] border border-[#E4E9E6] text-[#6B7C72] hover:text-[#1E2923]'
+                    }`}
+                  >
+                    {curr === 'USD' ? 'USD ($)' : curr === 'CENT' ? 'CENT (USc)' : 'IDR (Rp)'}
+                  </button>
+                ))}
+              </div>
+
               <div className="relative flex items-center">
                 <DollarSign className="w-4 h-4 text-[#05C46B] absolute left-3.5" />
                 <input
                   type="number"
                   min="0"
-                  step="100"
+                  step="any"
                   required
                   value={initialBalance}
                   onChange={(e) => setInitialBalance(e.target.value)}
-                  placeholder="10000"
+                  placeholder="e.g. 10, 100, 10000..."
                   className="w-full p-3.5 pl-10 rounded-xl border border-[#E4E9E6] bg-[#F8FAF9] text-sm text-[#1E2923] font-extrabold outline-none focus:border-[#05C46B]"
                 />
               </div>
+              <p className="text-[10px] text-[#6B7C72] italic font-medium">
+                Bisa diisi fleksibel dari $0, $10, $50, hingga nominal berapapun sesuai tipe akun Anda.
+              </p>
             </div>
           </div>
 

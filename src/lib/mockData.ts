@@ -87,23 +87,23 @@ export const initialTrades: TradeLog[] = [
 export const initialGroups: TradingGroup[] = [
   {
     id: 'grp_1',
-    name: 'SMC Scalpers 9 Naga',
-    code: 'NAGA99',
+    name: 'SMC Scalpers Elite',
+    code: 'SMC99',
     description: 'Komunitas eksklusif trader SMC & ICT yang tidak tamak dan konsisten profit.',
     membersCount: 128,
     totalPnl: 485900.00,
     winRate: 82.4,
-    isJoined: true,
+    isJoined: false,
   },
   {
     id: 'grp_2',
-    name: '9 Naga Elite Traders',
+    name: 'KRtrade Elite Traders',
     code: 'ELITE9',
     description: 'Komunitas VIP murid kepercayaan Filla untuk mencapai wealth level tertinggi.',
     membersCount: 45,
     totalPnl: 1240500.00,
     winRate: 88.9,
-    isJoined: true,
+    isJoined: false,
   },
   {
     id: 'grp_3',

@@ -1,5 +1,5 @@
 -- KRtrade Platform
--- Idempotent Supabase PostgreSQL Schema DDL (Safe To Run Multiple Times)
+-- Idempotent Supabase PostgreSQL Schema DDL (Full Backend & Database Synchronization)
 
 -- 1. PROFILES TABLE
 CREATE TABLE IF NOT EXISTS public.profiles (
@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   avatar_url TEXT,
   bio TEXT,
   initial_balance NUMERIC(15, 2) DEFAULT 10000.00,
+  account_currency TEXT DEFAULT 'USD',
   trading_style TEXT NOT NULL CHECK (trading_style IN ('Swing Trade', 'Intraday', 'Scalping')),
   accepts_tamak_promise BOOLEAN DEFAULT TRUE,
   acknowledges_filla_richest BOOLEAN DEFAULT TRUE,
@@ -20,6 +21,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS avatar_url TEXT;
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS bio TEXT;
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS initial_balance NUMERIC(15, 2) DEFAULT 10000.00;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS account_currency TEXT DEFAULT 'USD';
 
 -- 2. TRADES TABLE
 CREATE TABLE IF NOT EXISTS public.trades (

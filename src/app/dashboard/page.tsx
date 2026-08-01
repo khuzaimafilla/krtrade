@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
-import { TradeLog } from '@/types';
+import { TradeLog, formatCurrencyAmount } from '@/types';
 import { getStoredTrades } from '@/lib/storage';
 import EquityChart from '@/components/dashboard/EquityChart';
 import CreatorBadge from '@/components/common/CreatorBadge';
@@ -120,10 +120,10 @@ export default function DashboardPage() {
             </div>
           </div>
           <p className="text-xl sm:text-2xl font-extrabold text-[#1E2923]">
-            ${currentBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+            {formatCurrencyAmount(currentBalance, user?.accountCurrency || 'USD')}
           </p>
           <p className="text-[10px] text-[#6B7C72] font-medium mt-1">
-            Saldo Awal: ${initialBalance.toLocaleString()}
+            Saldo Awal: {formatCurrencyAmount(initialBalance, user?.accountCurrency || 'USD')}
           </p>
         </div>
 

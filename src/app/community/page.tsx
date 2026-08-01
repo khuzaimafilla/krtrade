@@ -43,15 +43,32 @@ export default function CommunityPage() {
   useEffect(() => {
     async function loadGroups() {
       const storedLocal = getStoredGroups();
-      let finalGroups: TradingGroup[] = storedLocal.map((g, idx) => ({
-        ...g,
-        createdBy: g.createdBy || (idx === 0 ? (user?.id || 'usr_khuzaima') : 'usr_sultan'),
-        members: g.members || [
-          { id: user?.id || 'usr_khuzaima', username: user?.username || 'khuzaimafilla', fullName: user?.fullName || 'Khuzaima Filla', role: 'admin' as const },
-          { id: 'usr_sultan', username: 'Sultan_Gold_SMC', fullName: 'Sultan Gold SMC', role: 'member' as const },
-          { id: 'usr_rega', username: 'rega_trader', fullName: 'Rega Trading Expert', role: 'member' as const },
-        ],
-      }));
+
+      // Read user-specific joined group IDs from localStorage
+      const userJoinedKey = user ? `krtrade_joined_${user.id}` : 'krtrade_joined_guest';
+      const userJoinedSet = new Set<string>();
+      if (typeof window !== 'undefined') {
+        const storedJoined = localStorage.getItem(userJoinedKey);
+        if (storedJoined) {
+          try {
+            JSON.parse(storedJoined).forEach((id: string) => userJoinedSet.add(id));
+          } catch {}
+        }
+      }
+
+      let finalGroups: TradingGroup[] = storedLocal.map((g, idx) => {
+        const isCreatedByMe = user && (g.createdBy === user.id || (idx === 0 && user.username === 'khuzaimafilla'));
+        const isUserJoined = isCreatedByMe || userJoinedSet.has(g.id);
+
+        return {
+          ...g,
+          createdBy: g.createdBy || (idx === 0 ? (user?.id || 'usr_khuzaima') : 'usr_sultan'),
+          isJoined: isUserJoined,
+          members: g.members || [
+            { id: g.createdBy || 'usr_admin', username: 'GroupAdmin', fullName: 'Group Creator', role: 'admin' as const },
+          ],
+        };
+      });
 
       if (isSupabaseConfigured && user) {
         try {
@@ -64,22 +81,25 @@ export default function CommunityPage() {
 
             const joinedGroupIds = new Set(myMemberships?.map((m: any) => m.group_id));
 
-            const mappedDb: TradingGroup[] = dbGroups.map((g: any) => ({
-              id: g.id,
-              name: g.name,
-              code: g.code,
-              description: g.description || 'Komunitas Trading Kolaboratif KRtrade Platform.',
-              membersCount: 12,
-              totalPnl: 45000.00,
-              winRate: 81.5,
-              isJoined: joinedGroupIds.has(g.id),
-              createdBy: g.created_by || user.id,
-              members: [
-                { id: g.created_by || user.id, username: user.username, fullName: user.fullName, role: 'admin' },
-                { id: 'usr_sultan', username: 'Sultan_Gold_SMC', fullName: 'Sultan Gold SMC', role: 'member' },
-                { id: 'usr_rega', username: 'rega_trader', fullName: 'Rega Trading Expert', role: 'member' },
-              ],
-            }));
+            const mappedDb: TradingGroup[] = dbGroups.map((g: any) => {
+              const isMine = g.created_by === user.id;
+              const isJoined = isMine || joinedGroupIds.has(g.id) || userJoinedSet.has(g.id);
+
+              return {
+                id: g.id,
+                name: g.name,
+                code: g.code,
+                description: g.description || 'Komunitas Trading Kolaboratif KRtrade Platform.',
+                membersCount: 12,
+                totalPnl: 45000.00,
+                winRate: 81.5,
+                isJoined: isJoined,
+                createdBy: g.created_by || user.id,
+                members: [
+                  { id: g.created_by || user.id, username: user.username, fullName: user.fullName, role: 'admin' },
+                ],
+              };
+            });
 
             const dbCodes = new Set(mappedDb.map((g) => g.code));
             const extraLocal = finalGroups.filter((g) => !dbCodes.has(g.code));
@@ -197,9 +217,17 @@ export default function CommunityPage() {
   };
 
   const toggleGroupJoin = (id: string) => {
+    const userJoinedKey = user ? `krtrade_joined_${user.id}` : 'krtrade_joined_guest';
     const updated = groups.map((g) => {
       if (g.id === id) {
         const nextJoined = !g.isJoined;
+        if (typeof window !== 'undefined') {
+          const currentJoined = JSON.parse(localStorage.getItem(userJoinedKey) || '[]');
+          const newJoined = nextJoined
+            ? Array.from(new Set([...currentJoined, id]))
+            : currentJoined.filter((gid: string) => gid !== id);
+          localStorage.setItem(userJoinedKey, JSON.stringify(newJoined));
+        }
         return {
           ...g,
           isJoined: nextJoined,

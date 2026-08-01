@@ -46,7 +46,7 @@ export default function LeaderboardPage() {
               });
             }
 
-            const entries: LeaderboardEntry[] = profilesData.map((p, index) => {
+            const dbEntries: LeaderboardEntry[] = profilesData.map((p) => {
               const userTrades = tradesData ? tradesData.filter((t) => t.user_id === p.id) : [];
               const totalTrades = userTrades.length;
               const winningTrades = userTrades.filter((t) => Number(t.pnl) > 0).length;
@@ -54,13 +54,13 @@ export default function LeaderboardPage() {
               const totalPnl = userTrades.reduce((acc, t) => acc + Number(t.pnl || 0), 0);
               const returnPercentage = totalTrades > 0 ? Math.round((totalPnl / 10000) * 100) : 0;
 
-              const isMe = currentUser && (p.id === currentUser.id || p.username === currentUser.username);
+              const isMe = currentUser && (p.id === currentUser.id || p.username.toLowerCase() === currentUser.username.toLowerCase());
               const finalAvatar = isMe && currentUser?.avatarUrl ? currentUser.avatarUrl : (p.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${p.username}`);
               const finalFullName = isMe && currentUser?.fullName ? currentUser.fullName : (p.full_name || p.username);
 
               return {
                 id: p.id,
-                rank: index + 1,
+                rank: 0,
                 username: p.username,
                 fullName: finalFullName,
                 avatarUrl: finalAvatar,
@@ -73,11 +73,83 @@ export default function LeaderboardPage() {
               };
             });
 
-            // Sort by Net PnL descending
-            entries.sort((a, b) => b.totalPnl - a.totalPnl);
-            entries.forEach((e, idx) => { e.rank = idx + 1; });
+            // Merge with seed entries if not present
+            const seedUsers: LeaderboardEntry[] = [
+              {
+                id: 'usr_khuzaima',
+                rank: 0,
+                username: 'khuzaimafilla',
+                fullName: 'Khuzaima Filla (Developer)',
+                avatarUrl: (currentUser?.username.toLowerCase() === 'khuzaimafilla' && currentUser.avatarUrl)
+                  ? currentUser.avatarUrl
+                  : 'https://api.dicebear.com/7.x/avataaars/svg?seed=khuzaimafilla',
+                tradingStyle: 'Scalping',
+                totalTrades: 124,
+                winRate: 88,
+                returnPercentage: 450,
+                totalPnl: 45000,
+                isFriend: true,
+              },
+              {
+                id: 'usr_sultan',
+                rank: 0,
+                username: 'Sultan_Gold_SMC',
+                fullName: 'Sultan Gold SMC',
+                avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=SultanGold',
+                tradingStyle: 'Intraday',
+                totalTrades: 58,
+                winRate: 81,
+                returnPercentage: 345,
+                totalPnl: 34500,
+                isFriend: true,
+              },
+              {
+                id: 'usr_rega',
+                rank: 0,
+                username: 'rega_trader',
+                fullName: 'Rega Trading Expert',
+                avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=rega',
+                tradingStyle: 'Swing Trade',
+                totalTrades: 32,
+                winRate: 75,
+                returnPercentage: 220,
+                totalPnl: 22000,
+                isFriend: true,
+              },
+            ];
 
-            setLeaderboardEntries(entries);
+            const existingUsernames = new Set(dbEntries.map((e) => e.username.toLowerCase()));
+
+            // Add seed users if not in DB
+            seedUsers.forEach((seed) => {
+              if (!existingUsernames.has(seed.username.toLowerCase())) {
+                dbEntries.push(seed);
+                existingUsernames.add(seed.username.toLowerCase());
+              }
+            });
+
+            // Add current logged in user if not in DB
+            if (currentUser && !existingUsernames.has(currentUser.username.toLowerCase())) {
+              dbEntries.push({
+                id: currentUser.id,
+                rank: 0,
+                username: currentUser.username,
+                fullName: currentUser.fullName,
+                avatarUrl: currentUser.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${currentUser.username}`,
+                tradingStyle: currentUser.tradingStyle,
+                totalTrades: 0,
+                winRate: 0,
+                returnPercentage: 0,
+                totalPnl: 0,
+                isFriend: true,
+              });
+            }
+
+            // Sort by Net PnL descending
+            dbEntries.sort((a, b) => b.totalPnl - a.totalPnl);
+            dbEntries.forEach((e, idx) => { e.rank = idx + 1; });
+
+            setLeaderboardEntries(dbEntries);
             setLoading(false);
             return;
           }
