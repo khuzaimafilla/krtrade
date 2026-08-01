@@ -211,7 +211,6 @@ export default function CommunityPage() {
   }, [user]);
 
   const saveGroups = (updated: TradingGroup[]) => {
-    setGroups(updated);
     setStoredGroups(updated);
   };
 
@@ -268,7 +267,11 @@ export default function CommunityPage() {
     const currentJoined = JSON.parse(localStorage.getItem(userJoinedKey) || '[]');
     localStorage.setItem(userJoinedKey, JSON.stringify([...new Set([...currentJoined, newGroupId])]));
 
-    saveGroups([newGrp, ...groups]);
+    setGroups((prevGroups) => {
+      const updated = [newGrp, ...prevGroups];
+      setStoredGroups(updated);
+      return updated;
+    });
     setIsCreateOpen(false);
     setNewGroupName('');
     setNewGroupCode('');
@@ -313,9 +316,11 @@ export default function CommunityPage() {
       requestedAt: new Date().toISOString(),
     };
 
-    const updatedRequests = [...joinRequests, request];
-    setJoinRequests(updatedRequests);
-    saveStoredRequests(updatedRequests);
+    setJoinRequests((prev) => {
+      const updated = [...prev, request];
+      saveStoredRequests(updated);
+      return updated;
+    });
 
     if (isSupabaseConfigured && user) {
       await supabase.from('group_join_requests').insert({
@@ -342,22 +347,30 @@ export default function CommunityPage() {
       joinedAt: new Date().toISOString(),
     };
 
-    const updated = groups.map((g) => {
-      if (g.id === request.groupId) {
-        const alreadyMember = g.members?.some((m) => m.id === request.userId);
-        if (alreadyMember) return g;
-        const updatedMembers = [...(g.members || []), newMember];
-        return {
-          ...g,
-          members: updatedMembers,
-          membersCount: updatedMembers.length,
-          isJoined: g.isJoined,
-        };
+    setGroups((prevGroups) => {
+      const updated = prevGroups.map((g) => {
+        if (g.id === request.groupId) {
+          const alreadyMember = g.members?.some((m) => m.id === request.userId);
+          if (alreadyMember) return g;
+          const updatedMembers = [...(g.members || []), newMember];
+          return {
+            ...g,
+            members: updatedMembers,
+            membersCount: updatedMembers.length,
+            isJoined: g.isJoined,
+          };
+        }
+        return g;
+      });
+      setStoredGroups(updated);
+      
+      // Update admin modal using the new groups state
+      if (selectedAdminGroup?.id === request.groupId) {
+        const updatedGroup = updated.find((g) => g.id === request.groupId);
+        if (updatedGroup) setSelectedAdminGroup(updatedGroup);
       }
-      return g;
+      return updated;
     });
-
-    saveGroups(updated);
 
     // Save their joined state in localStorage
     const userJoinedKey = `krtrade_joined_${request.userId}`;
@@ -365,9 +378,11 @@ export default function CommunityPage() {
     localStorage.setItem(userJoinedKey, JSON.stringify([...new Set([...existing, request.groupId])]));
 
     // Remove request
-    const filteredRequests = joinRequests.filter((r) => r.id !== request.id);
-    setJoinRequests(filteredRequests);
-    saveStoredRequests(filteredRequests);
+    setJoinRequests((prev) => {
+      const filtered = prev.filter((r) => r.id !== request.id);
+      saveStoredRequests(filtered);
+      return filtered;
+    });
 
     if (isSupabaseConfigured) {
       // 1. Update request status to accepted
@@ -379,19 +394,17 @@ export default function CommunityPage() {
       }).then();
     }
 
-    // Update admin modal
-    if (selectedAdminGroup?.id === request.groupId) {
-      const updatedGroup = updated.find((g) => g.id === request.groupId);
-      if (updatedGroup) setSelectedAdminGroup(updatedGroup);
-    }
+
 
     showToast(`@${request.username} berhasil diterima sebagai anggota!`);
   };
 
   const handleRejectRequest = (request: JoinRequest) => {
-    const filteredRequests = joinRequests.filter((r) => r.id !== request.id);
-    setJoinRequests(filteredRequests);
-    saveStoredRequests(filteredRequests);
+    setJoinRequests((prev) => {
+      const filtered = prev.filter((r) => r.id !== request.id);
+      saveStoredRequests(filtered);
+      return filtered;
+    });
 
     if (isSupabaseConfigured) {
       supabase.from('group_join_requests').update({ status: 'rejected' }).eq('id', request.id).then();
@@ -465,7 +478,7 @@ export default function CommunityPage() {
       {/* Toast Notification */}
       {toast && (
         <div
-          className={`fixed top-4 right-4 z-[100] px-5 py-3.5 rounded-2xl shadow-xl font-bold text-sm flex items-center space-x-2.5 animate-fade-in max-w-sm ${
+          className={`fixed top-20 right-4 z-[9999] px-5 py-3.5 rounded-2xl shadow-xl font-bold text-sm flex items-center space-x-2.5 animate-fade-in max-w-sm ${
             toast.type === 'success'
               ? 'bg-[#E6F7F0] border border-[#05C46B]/40 text-[#05C46B]'
               : toast.type === 'error'
