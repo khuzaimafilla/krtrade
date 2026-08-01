@@ -42,54 +42,57 @@ export default function CommunityPage() {
 
   useEffect(() => {
     async function loadGroups() {
-      if (isSupabaseConfigured && user) {
-        const { data: dbGroups, error } = await supabase.from('groups').select('*');
-        if (!error && dbGroups) {
-          const { data: myMemberships } = await supabase
-            .from('group_members')
-            .select('group_id')
-            .eq('user_id', user.id);
-
-          const joinedGroupIds = new Set(myMemberships?.map((m: any) => m.group_id));
-
-          const mapped: TradingGroup[] = dbGroups.map((g: any) => ({
-            id: g.id,
-            name: g.name,
-            code: g.code,
-            description: g.description || 'Komunitas Trading Kolaboratif KRtrade Platform.',
-            membersCount: 12,
-            totalPnl: 45000.00,
-            winRate: 81.5,
-            isJoined: joinedGroupIds.has(g.id),
-            createdBy: g.created_by || user.id,
-            members: [
-              { id: g.created_by || user.id, username: user.username, fullName: user.fullName, role: 'admin' },
-              { id: 'usr_sultan', username: 'Sultan_Gold_SMC', fullName: 'Sultan Gold SMC', role: 'member' },
-              { id: 'usr_rega', username: 'rega_trader', fullName: 'Rega Trading Expert', role: 'member' },
-              { id: 'usr_intraday', username: 'Intraday_Sniper99', fullName: 'Intraday Sniper', role: 'member' },
-            ],
-          }));
-
-          setGroups(mapped);
-          return;
-        }
-      }
-
-      // Default Mock Groups if no DB
-      const stored = getStoredGroups();
-      const mappedStored = stored.map((g, idx) => ({
+      const storedLocal = getStoredGroups();
+      let finalGroups: TradingGroup[] = storedLocal.map((g, idx) => ({
         ...g,
-        createdBy: idx === 0 ? (user?.id || 'usr_khuzaima') : 'usr_sultan',
-        members: [
+        createdBy: g.createdBy || (idx === 0 ? (user?.id || 'usr_khuzaima') : 'usr_sultan'),
+        members: g.members || [
           { id: user?.id || 'usr_khuzaima', username: user?.username || 'khuzaimafilla', fullName: user?.fullName || 'Khuzaima Filla', role: 'admin' as const },
           { id: 'usr_sultan', username: 'Sultan_Gold_SMC', fullName: 'Sultan Gold SMC', role: 'member' as const },
           { id: 'usr_rega', username: 'rega_trader', fullName: 'Rega Trading Expert', role: 'member' as const },
-          { id: 'usr_regina', username: 'regina_forex', fullName: 'Regina Forex Analyst', role: 'member' as const },
         ],
       }));
 
-      setGroups(mappedStored);
+      if (isSupabaseConfigured && user) {
+        try {
+          const { data: dbGroups, error } = await supabase.from('groups').select('*');
+          if (!error && dbGroups && dbGroups.length > 0) {
+            const { data: myMemberships } = await supabase
+              .from('group_members')
+              .select('group_id')
+              .eq('user_id', user.id);
+
+            const joinedGroupIds = new Set(myMemberships?.map((m: any) => m.group_id));
+
+            const mappedDb: TradingGroup[] = dbGroups.map((g: any) => ({
+              id: g.id,
+              name: g.name,
+              code: g.code,
+              description: g.description || 'Komunitas Trading Kolaboratif KRtrade Platform.',
+              membersCount: 12,
+              totalPnl: 45000.00,
+              winRate: 81.5,
+              isJoined: joinedGroupIds.has(g.id),
+              createdBy: g.created_by || user.id,
+              members: [
+                { id: g.created_by || user.id, username: user.username, fullName: user.fullName, role: 'admin' },
+                { id: 'usr_sultan', username: 'Sultan_Gold_SMC', fullName: 'Sultan Gold SMC', role: 'member' },
+                { id: 'usr_rega', username: 'rega_trader', fullName: 'Rega Trading Expert', role: 'member' },
+              ],
+            }));
+
+            const dbCodes = new Set(mappedDb.map((g) => g.code));
+            const extraLocal = finalGroups.filter((g) => !dbCodes.has(g.code));
+            finalGroups = [...mappedDb, ...extraLocal];
+          }
+        } catch (err) {
+          console.error('Error loading DB groups:', err);
+        }
+      }
+
+      setGroups(finalGroups);
     }
+
     loadGroups();
   }, [user]);
 

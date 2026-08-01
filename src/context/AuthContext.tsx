@@ -73,6 +73,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               isAgreedTamak: profile.accepts_tamak_promise,
               isAgreedFillaRichest: profile.acknowledges_filla_richest,
               avatarUrl: profile.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.username}`,
+              bio: profile.bio || 'Trader aktif KRtrade Platform.',
+              initialBalance: profile.initial_balance ? Number(profile.initial_balance) : 10000,
             };
             setUser(mappedUser);
             setIsAuthenticated(true);
@@ -284,6 +286,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         full_name: updated.fullName,
         username: updated.username,
         avatar_url: updated.avatarUrl,
+        bio: updated.bio,
+        initial_balance: updated.initialBalance,
       }).eq('id', user.id);
     }
   };

@@ -92,6 +92,7 @@ export const translations: Record<Language, Record<string, string>> = {
 
     // Leaderboard
     leaderboardTitle: 'KRtrade Multi-Filter Leaderboard',
+    addFriendBtn: 'Tambah Teman',
     tabFriends: 'Friends Only',
     tabCommunity: 'Community Members',
     tabGlobal: 'Global Leaderboard',
@@ -205,6 +206,7 @@ export const translations: Record<Language, Record<string, string>> = {
 
     // Leaderboard
     leaderboardTitle: 'KRtrade Multi-Filter Leaderboard',
+    addFriendBtn: 'Add Friend',
     tabFriends: 'Friends Only',
     tabCommunity: 'Community Members',
     tabGlobal: 'Global Leaderboard',

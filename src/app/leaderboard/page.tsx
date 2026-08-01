@@ -54,18 +54,22 @@ export default function LeaderboardPage() {
               const totalPnl = userTrades.reduce((acc, t) => acc + Number(t.pnl || 0), 0);
               const returnPercentage = totalTrades > 0 ? Math.round((totalPnl / 10000) * 100) : 0;
 
+              const isMe = currentUser && (p.id === currentUser.id || p.username === currentUser.username);
+              const finalAvatar = isMe && currentUser?.avatarUrl ? currentUser.avatarUrl : (p.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${p.username}`);
+              const finalFullName = isMe && currentUser?.fullName ? currentUser.fullName : (p.full_name || p.username);
+
               return {
                 id: p.id,
                 rank: index + 1,
                 username: p.username,
-                fullName: p.full_name || p.username,
-                avatarUrl: p.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${p.username}`,
+                fullName: finalFullName,
+                avatarUrl: finalAvatar,
                 tradingStyle: p.trading_style as TradingStyle,
                 totalTrades,
                 winRate,
                 returnPercentage,
                 totalPnl,
-                isFriend: friendUserIds.has(p.id) || p.id === currentUser?.id,
+                isFriend: Boolean(friendUserIds.has(p.id) || isMe),
               };
             });
 
