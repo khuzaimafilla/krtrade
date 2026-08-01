@@ -30,10 +30,6 @@ export default function AddFriendModal({ isOpen, onClose, onFriendAdded }: AddFr
   // Mock Users Database for fallback
   const mockUsersList = [
     { id: 'usr_khuzaima', username: 'khuzaimafilla', full_name: 'Khuzaima Filla (Developer)', avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=khuzaimafilla', trading_style: 'Scalping', win_rate: 88.5, total_pnl: 45000 },
-    { id: 'usr_sultan', username: 'Sultan_Gold_SMC', full_name: 'Sultan Gold SMC', avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=SultanGold', trading_style: 'Intraday', win_rate: 72.4, total_pnl: 18500 },
-    { id: 'usr_rega', username: 'rega_trader', full_name: 'Rega Trading Expert', avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=rega', trading_style: 'Swing Trade', win_rate: 69.8, total_pnl: 14200 },
-    { id: 'usr_regina', username: 'regina_forex', full_name: 'Regina Forex Analyst', avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=regina', trading_style: 'Scalping', win_rate: 65.0, total_pnl: 9800 },
-    { id: 'usr_intraday', username: 'Intraday_Sniper99', full_name: 'Intraday Sniper', avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=IntradaySniper', trading_style: 'Intraday', win_rate: 64.2, total_pnl: 8700 },
   ];
 
   // Instagram-style instant autocomplete live search as user types

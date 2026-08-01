@@ -73,60 +73,29 @@ export default function LeaderboardPage() {
               };
             });
 
-            // Merge with seed entries if not present
-            const seedUsers: LeaderboardEntry[] = [
-              {
-                id: 'usr_khuzaima',
-                rank: 0,
-                username: 'khuzaimafilla',
-                fullName: 'Khuzaima Filla (Developer)',
-                avatarUrl: (currentUser?.username.toLowerCase() === 'khuzaimafilla' && currentUser.avatarUrl)
-                  ? currentUser.avatarUrl
-                  : 'https://api.dicebear.com/7.x/avataaars/svg?seed=khuzaimafilla',
-                tradingStyle: 'Scalping',
-                totalTrades: 124,
-                winRate: 88,
-                returnPercentage: 450,
-                totalPnl: 45000,
-                isFriend: true,
-              },
-              {
-                id: 'usr_sultan',
-                rank: 0,
-                username: 'Sultan_Gold_SMC',
-                fullName: 'Sultan Gold SMC',
-                avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=SultanGold',
-                tradingStyle: 'Intraday',
-                totalTrades: 58,
-                winRate: 81,
-                returnPercentage: 345,
-                totalPnl: 34500,
-                isFriend: true,
-              },
-              {
-                id: 'usr_rega',
-                rank: 0,
-                username: 'rega_trader',
-                fullName: 'Rega Trading Expert',
-                avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=rega',
-                tradingStyle: 'Swing Trade',
-                totalTrades: 32,
-                winRate: 75,
-                returnPercentage: 220,
-                totalPnl: 22000,
-                isFriend: true,
-              },
-            ];
+            // Include Creator khuzaimafilla if not present in DB
+            const creatorSeed: LeaderboardEntry = {
+              id: 'usr_khuzaima',
+              rank: 0,
+              username: 'khuzaimafilla',
+              fullName: 'Khuzaima Filla (Developer)',
+              avatarUrl: (currentUser?.username.toLowerCase() === 'khuzaimafilla' && currentUser.avatarUrl)
+                ? currentUser.avatarUrl
+                : 'https://api.dicebear.com/7.x/avataaars/svg?seed=khuzaimafilla',
+              tradingStyle: 'Scalping',
+              totalTrades: 124,
+              winRate: 88,
+              returnPercentage: 450,
+              totalPnl: 45000,
+              isFriend: true,
+            };
 
             const existingUsernames = new Set(dbEntries.map((e) => e.username.toLowerCase()));
 
-            // Add seed users if not in DB
-            seedUsers.forEach((seed) => {
-              if (!existingUsernames.has(seed.username.toLowerCase())) {
-                dbEntries.push(seed);
-                existingUsernames.add(seed.username.toLowerCase());
-              }
-            });
+            if (!existingUsernames.has('khuzaimafilla')) {
+              dbEntries.push(creatorSeed);
+              existingUsernames.add('khuzaimafilla');
+            }
 
             // Add current logged in user if not in DB
             if (currentUser && !existingUsernames.has(currentUser.username.toLowerCase())) {
