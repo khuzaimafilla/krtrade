@@ -181,22 +181,23 @@ export default function CommunityPage() {
               .in('group_id', myAdminGroups)
               .eq('status', 'pending');
 
-            if (dbRequests && dbRequests.length > 0) {
-              const mappedRequests: JoinRequest[] = dbRequests.map((r: any) => ({
-                id: r.id,
-                groupId: r.group_id,
-                userId: r.user_id,
-                username: r.profiles?.username || 'user',
-                fullName: r.profiles?.full_name || 'User',
-                avatarUrl: r.profiles?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${r.profiles?.username}`,
-                requestedAt: r.created_at,
-              }));
+            // Always use DB as source of truth — even if empty (meaning all were accepted/rejected)
+            const mappedRequests: JoinRequest[] = (dbRequests || []).map((r: any) => ({
+              id: r.id,
+              groupId: r.group_id,
+              userId: r.user_id,
+              username: r.profiles?.username || 'user',
+              fullName: r.profiles?.full_name || 'User',
+              avatarUrl: r.profiles?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${r.profiles?.username}`,
+              requestedAt: r.created_at,
+            }));
 
-              // Merge with local requests to avoid duplicates
-              const dbRequestIds = new Set(mappedRequests.map(r => `${r.groupId}-${r.userId}`));
-              const filteredLocal = requests.filter(r => !dbRequestIds.has(`${r.groupId}-${r.userId}`));
-              setJoinRequests([...mappedRequests, ...filteredLocal]);
-            }
+            // Merge: take DB list + local requests NOT for admin groups (i.e., own outgoing requests)
+            const dbGroupIdSet = new Set(myAdminGroups);
+            const nonAdminLocalRequests = requests.filter(r => !dbGroupIdSet.has(r.groupId));
+            setJoinRequests([...mappedRequests, ...nonAdminLocalRequests]);
+            // Sync localStorage to match DB
+            saveStoredRequests([...mappedRequests, ...nonAdminLocalRequests]);
           }
 
         } catch (err) {
@@ -336,7 +337,7 @@ export default function CommunityPage() {
     showToast(`Permintaan bergabung ke "${targetGroup.name}" telah dikirim! Menunggu persetujuan Admin.`, 'info');
   };
 
-  const handleAcceptRequest = (request: JoinRequest) => {
+  const handleAcceptRequest = async (request: JoinRequest) => {
     // Add user to group as member
     const newMember: GroupMemberDetail = {
       id: request.userId,
@@ -386,12 +387,12 @@ export default function CommunityPage() {
 
     if (isSupabaseConfigured) {
       // 1. Update request status to accepted
-      supabase.from('group_join_requests').update({ status: 'accepted' }).eq('id', request.id).then();
-      // 2. Insert into group_members
-      supabase.from('group_members').insert({
+      await supabase.from('group_join_requests').update({ status: 'accepted' }).eq('id', request.id);
+      // 2. Insert into group_members (ignore conflict if already exists)
+      await supabase.from('group_members').upsert({
         group_id: request.groupId,
         user_id: request.userId,
-      }).then();
+      }, { onConflict: 'group_id,user_id' });
     }
 
 

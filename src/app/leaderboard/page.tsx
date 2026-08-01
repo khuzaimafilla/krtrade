@@ -35,16 +35,48 @@ export default function LeaderboardPage() {
   const [friendIds, setFriendIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    // Load community groups to know which community members to show
-    const stored = getStoredGroups();
-    const userJoinedKey = currentUser ? `krtrade_joined_${currentUser.id}` : 'krtrade_joined_guest';
-    const joinedRaw = typeof window !== 'undefined' ? localStorage.getItem(userJoinedKey) : null;
-    const joinedIds: string[] = joinedRaw ? JSON.parse(joinedRaw) : [];
-    // Groups user is admin of or joined
-    const myGroupIds = new Set<string>(
-      stored.filter(g => g.isJoined || joinedIds.includes(g.id) || g.createdBy === currentUser?.id).map(g => g.id)
-    );
-    setUserGroupIds(myGroupIds);
+    async function loadUserGroups() {
+      const stored = getStoredGroups();
+      const userJoinedKey = currentUser ? `krtrade_joined_${currentUser.id}` : 'krtrade_joined_guest';
+      const joinedRaw = typeof window !== 'undefined' ? localStorage.getItem(userJoinedKey) : null;
+      const joinedIds: string[] = joinedRaw ? JSON.parse(joinedRaw) : [];
+
+      // Start with local data
+      const localGroupIds = new Set<string>(
+        stored.filter(g => g.isJoined || joinedIds.includes(g.id) || g.createdBy === currentUser?.id).map(g => g.id)
+      );
+
+      // Enrich with real Supabase data if user is logged in
+      if (isSupabaseConfigured && currentUser) {
+        try {
+          // 1. Groups where user is a member
+          const { data: memberRows } = await supabase
+            .from('group_members')
+            .select('group_id')
+            .eq('user_id', currentUser.id);
+
+          if (memberRows) {
+            memberRows.forEach((row: { group_id: string }) => localGroupIds.add(row.group_id));
+          }
+
+          // 2. Groups where user is creator
+          const { data: createdGroups } = await supabase
+            .from('groups')
+            .select('id')
+            .eq('created_by', currentUser.id);
+
+          if (createdGroups) {
+            createdGroups.forEach((g: { id: string }) => localGroupIds.add(g.id));
+          }
+        } catch (err) {
+          console.error('Error loading user groups for leaderboard:', err);
+        }
+      }
+
+      setUserGroupIds(localGroupIds);
+    }
+
+    loadUserGroups();
   }, [currentUser]);
 
   useEffect(() => {
