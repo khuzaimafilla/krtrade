@@ -31,6 +31,9 @@ export default function LeaderboardPage() {
   // Community group IDs the user is a member of
   const [userGroupIds, setUserGroupIds] = useState<Set<string>>(new Set());
 
+  // User IDs that share the same community groups as current user
+  const [communityMemberIds, setCommunityMemberIds] = useState<Set<string>>(new Set());
+
   // Friend user IDs (accepted)
   const [friendIds, setFriendIds] = useState<Set<string>>(new Set());
 
@@ -67,6 +70,24 @@ export default function LeaderboardPage() {
 
           if (createdGroups) {
             createdGroups.forEach((g: { id: string }) => localGroupIds.add(g.id));
+          }
+
+          // 3. Fetch ALL member IDs from groups the user belongs to
+          if (localGroupIds.size > 0) {
+            const { data: allMembers } = await supabase
+              .from('group_members')
+              .select('user_id')
+              .in('group_id', Array.from(localGroupIds));
+
+            const memberSet = new Set<string>();
+            if (allMembers) {
+              allMembers.forEach((m: { user_id: string }) => memberSet.add(m.user_id));
+            }
+            // Also include the current user themselves
+            memberSet.add(currentUser.id);
+            setCommunityMemberIds(memberSet);
+          } else {
+            setCommunityMemberIds(new Set());
           }
         } catch (err) {
           console.error('Error loading user groups for leaderboard:', err);
@@ -251,9 +272,9 @@ export default function LeaderboardPage() {
       // Scope Filter
       if (scopeTab === 'friends' && !entry.isFriend) return false;
       if (scopeTab === 'community') {
-        // Show users who are in any of the user's communities
-        // For now show all (community filtering would require group_members cross join)
-        if (!entry.isFriend && !userGroupIds.size) return false;
+        // Strictly show only users who are actual members of the same group(s)
+        if (communityMemberIds.size === 0) return false;
+        if (!communityMemberIds.has(entry.id)) return false;
       }
       // Style Filter
       if (styleFilter !== 'ALL' && entry.tradingStyle !== styleFilter) return false;
@@ -265,7 +286,7 @@ export default function LeaderboardPage() {
       ...entry,
       rank: index + 1,
     }));
-  }, [leaderboardEntries, scopeTab, styleFilter, userGroupIds]);
+  }, [leaderboardEntries, scopeTab, styleFilter, communityMemberIds]);
 
   const handleOpenUserPreview = async (entry: LeaderboardEntry) => {
     // Fetch real bio from DB if available
