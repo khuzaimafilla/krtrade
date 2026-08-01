@@ -9,6 +9,7 @@ import {
   BookOpen,
   Users,
   Trophy,
+  User,
   Settings,
 } from 'lucide-react';
 
@@ -25,11 +26,12 @@ export default function BottomNav() {
     { href: '/journal', label: t('journal'), icon: BookOpen },
     { href: '/community', label: t('community'), icon: Users },
     { href: '/leaderboard', label: t('leaderboard'), icon: Trophy },
+    { href: '/profile', label: 'Profil', icon: User },
     { href: '/settings', label: t('settings'), icon: Settings },
   ];
 
   return (
-    <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-lg border-t border-[#E4E9E6] px-2 py-2">
+    <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-lg border-t border-[#E4E9E6] px-1 py-1.5 font-poppins">
       <nav className="flex items-center justify-around">
         {items.map((item) => {
           const Icon = item.icon;
@@ -47,9 +49,9 @@ export default function BottomNav() {
                   isActive ? 'bg-[#E6F7F0] scale-110' : ''
                 }`}
               >
-                <Icon className="w-5 h-5" />
+                <Icon className="w-4 h-4" />
               </div>
-              <span className="text-[10px] font-bold tracking-tight mt-0.5">
+              <span className="text-[9px] font-bold tracking-tight mt-0.5">
                 {item.label}
               </span>
             </Link>

@@ -56,7 +56,7 @@ export default function WelcomePage() {
           </div>
           <div className="p-3.5 rounded-2xl bg-[#F8FAF9] border border-[#E4E9E6]">
             <Crown className="w-5 h-5 text-[#D4AF37] mb-1" />
-            <p className="font-bold text-xs text-[#1E2923]">Leaderboard 9 Naga</p>
+            <p className="font-bold text-xs text-[#1E2923]">Realtime Leaderboard</p>
             <p className="text-[11px] text-[#6B7C72]">Rank Komunitas & Friends</p>
           </div>
         </div>

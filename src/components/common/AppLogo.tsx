@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Crown } from 'lucide-react';
+import { TrendingUp } from 'lucide-react';
 
 interface AppLogoProps {
   className?: string;
@@ -28,7 +28,7 @@ export default function AppLogo({ className = '', size = 40, showText = true }: 
           style={{ width: `${size}px`, height: `${size}px` }}
           className="rounded-xl bg-gradient-to-tr from-[#05C46B] to-[#04A75B] flex items-center justify-center text-white shadow-md shadow-[#05C46B]/20 group-hover:scale-105 transition-transform"
         >
-          <Crown className="w-3/5 h-3/5 text-[#D4AF37]" />
+          <TrendingUp className="w-3/5 h-3/5 text-white" />
         </div>
       )}
 
@@ -39,11 +39,11 @@ export default function AppLogo({ className = '', size = 40, showText = true }: 
               KRtrade
             </span>
             <span className="px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wider rounded-full bg-[#E6F7F0] text-[#05C46B] border border-[#05C46B]/30 font-poppins">
-              9 Naga
+              PRO
             </span>
           </div>
           <p className="text-[10px] font-semibold text-[#6B7C72] font-poppins">
-            <span className="text-[#D4AF37]">BETA Version 0.0.0.1</span>
+            <span className="text-[#05C46B] font-bold">BETA Version 0.0.0.1</span>
           </p>
         </div>
       )}

@@ -23,14 +23,14 @@ export default function AuthPage() {
 
   const [mode, setMode] = useState<'login' | 'register'>('login');
 
-  // Password visibility state (Point 2)
+  // Password visibility state
   const [showLoginPassword, setShowLoginPassword] = useState(false);
   const [showRegPassword, setShowRegPassword] = useState(false);
   const [showRegConfirmPassword, setShowRegConfirmPassword] = useState(false);
 
-  // Login form state
-  const [loginEmailUser, setLoginEmailUser] = useState('Filla_Ferari9Naga');
-  const [loginPassword, setLoginPassword] = useState('9naga_password');
+  // Login form state - EMPTY INITIAL STATE (No prefilled default credentials!)
+  const [loginEmailUser, setLoginEmailUser] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
 
   // Register form state
   const [regFullName, setRegFullName] = useState('');
@@ -40,13 +40,13 @@ export default function AuthPage() {
   const [regConfirmPassword, setRegConfirmPassword] = useState('');
   const [regTradingStyle, setRegTradingStyle] = useState<TradingStyle>('Scalping');
 
-  // Mandatory checkboxes required by spec
+  // Mandatory checkboxes
   const [isAgreedTamak, setIsAgreedTamak] = useState(false);
   const [isAgreedFillaRichest, setIsAgreedFillaRichest] = useState(false);
 
   const [errorMessage, setErrorMessage] = useState('');
 
-  // Handle Login Submit -> Direct Authentication without OTP
+  // Handle Login Submit
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!loginEmailUser || !loginPassword) {
@@ -62,7 +62,7 @@ export default function AuthPage() {
     }
   };
 
-  // Handle Register Submit -> Validates mandatory checkboxes & trading style
+  // Handle Register Submit
   const handleRegisterSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage('');
@@ -78,7 +78,7 @@ export default function AuthPage() {
     }
 
     if (!isAgreedTamak || !isAgreedFillaRichest) {
-      setErrorMessage('Anda WAJIB menyetujui kedua janji & pengakuan trader di bawah!');
+      setErrorMessage('Anda harus menyetujui Janji Trader & Pengakuan Filla!');
       return;
     }
 
@@ -95,21 +95,17 @@ export default function AuthPage() {
     router.push('/dashboard');
   };
 
-  const isRegisterDisabled = !isAgreedTamak || !isAgreedFillaRichest;
-
   return (
-    <div className="min-h-screen bg-[#F8FAF9] flex flex-col justify-center items-center p-4 py-8 relative font-poppins">
-      <div className="w-full max-w-lg bg-white border border-[#E4E9E6] rounded-3xl shadow-xl p-6 sm:p-8 relative z-10 animate-fade-in">
-        {/* Header Branding */}
+    <div className="min-h-screen bg-[#F8FAF9] flex items-center justify-center p-4 py-8 font-poppins">
+      <div className="w-full max-w-md bg-white border border-[#E4E9E6] rounded-3xl shadow-2xl p-6 sm:p-8 animate-fade-in relative text-left">
+        {/* Logo Header */}
         <div className="flex flex-col items-center text-center mb-6">
-          <div className="mb-2">
-            <AppLogo size={48} showText={false} />
-          </div>
-          <h2 className="text-2xl font-black text-[#1E2923] font-montserrat">
+          <AppLogo size={48} showText={false} className="mb-2" />
+          <h1 className="text-2xl font-black text-[#1E2923] font-montserrat tracking-tight">
             {mode === 'login' ? t('loginTitle') : t('registerTitle')}
-          </h2>
+          </h1>
           <p className="text-xs text-[#6B7C72] mt-1 font-semibold">
-            <span className="text-[#D4AF37]">BETA Version 0.0.0.1</span>
+            {t('appSubtitle')}
           </p>
         </div>
 
@@ -117,21 +113,28 @@ export default function AuthPage() {
         <div className="grid grid-cols-2 gap-2 bg-[#F8FAF9] p-1.5 rounded-2xl border border-[#E4E9E6] mb-6">
           <button
             type="button"
-            onClick={() => { setMode('login'); setErrorMessage(''); }}
-            className={`py-2.5 rounded-xl font-extrabold text-sm transition-all font-montserrat ${
+            onClick={() => {
+              setMode('login');
+              setErrorMessage('');
+            }}
+            className={`py-2.5 rounded-xl text-xs font-extrabold transition-all ${
               mode === 'login'
-                ? 'bg-white text-[#05C46B] shadow-sm'
+                ? 'bg-white text-[#05C46B] shadow-sm border border-[#E4E9E6]'
                 : 'text-[#6B7C72] hover:text-[#1E2923]'
             }`}
           >
             {t('loginNow')}
           </button>
+
           <button
             type="button"
-            onClick={() => { setMode('register'); setErrorMessage(''); }}
-            className={`py-2.5 rounded-xl font-extrabold text-sm transition-all font-montserrat ${
+            onClick={() => {
+              setMode('register');
+              setErrorMessage('');
+            }}
+            className={`py-2.5 rounded-xl text-xs font-extrabold transition-all ${
               mode === 'register'
-                ? 'bg-white text-[#05C46B] shadow-sm'
+                ? 'bg-white text-[#05C46B] shadow-sm border border-[#E4E9E6]'
                 : 'text-[#6B7C72] hover:text-[#1E2923]'
             }`}
           >
@@ -139,10 +142,11 @@ export default function AuthPage() {
           </button>
         </div>
 
+        {/* Error Alert Banner */}
         {errorMessage && (
-          <div className="mb-4 p-3.5 rounded-xl bg-[#FF4D4D]/10 border border-[#FF4D4D]/30 flex items-start space-x-2 text-[#FF4D4D]">
-            <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
-            <p className="text-xs font-bold leading-relaxed">{errorMessage}</p>
+          <div className="p-3 mb-4 rounded-2xl bg-[#FF4D4D]/10 border border-[#FF4D4D]/30 text-[#FF4D4D] text-xs font-bold flex items-center space-x-2 animate-fade-in">
+            <AlertCircle className="w-4 h-4 shrink-0" />
+            <span>{errorMessage}</span>
           </div>
         )}
 
@@ -150,45 +154,45 @@ export default function AuthPage() {
         {mode === 'login' ? (
           <form onSubmit={handleLoginSubmit} className="space-y-4">
             <div>
-              <label className="block text-xs font-bold text-[#1E2923] uppercase mb-1">
+              <label className="block text-[11px] font-extrabold text-[#1E2923] uppercase mb-1">
                 {t('emailOrUsername')}
               </label>
-              <div className="relative">
+              <div className="relative flex items-center">
                 <input
                   type="text"
                   required
                   value={loginEmailUser}
                   onChange={(e) => setLoginEmailUser(e.target.value)}
-                  placeholder="Masukkan username atau email terdaftar"
-                  className="w-full p-3.5 pl-10 rounded-xl border border-[#E4E9E6] bg-[#F8FAF9] text-sm text-[#1E2923] font-semibold focus:border-[#05C46B] outline-none placeholder:text-slate-400 placeholder:opacity-50"
+                  placeholder="Ketik username atau email akun Anda..."
+                  className="w-full p-3.5 pl-10 rounded-2xl border border-[#E4E9E6] bg-[#F8FAF9] text-sm text-[#1E2923] font-semibold outline-none focus:border-[#05C46B] transition-colors"
                 />
-                <User className="w-4 h-4 text-[#6B7C72] absolute left-3.5 top-4" />
+                <User className="w-4 h-4 text-[#6B7C72] absolute left-3.5" />
               </div>
             </div>
 
             <div>
               <div className="flex items-center justify-between mb-1">
-                <label className="block text-xs font-bold text-[#1E2923] uppercase">
+                <label className="block text-[11px] font-extrabold text-[#1E2923] uppercase">
                   {t('password')}
                 </label>
-                <a href="#forgot" onClick={(e) => { e.preventDefault(); alert('Instruksi reset password telah dikirim ke email Anda!'); }} className="text-xs font-bold text-[#05C46B] hover:underline">
+                <a href="#" className="text-[11px] font-bold text-[#05C46B] hover:underline">
                   {t('forgotPassword')}
                 </a>
               </div>
-              <div className="relative">
+              <div className="relative flex items-center">
                 <input
                   type={showLoginPassword ? 'text' : 'password'}
                   required
                   value={loginPassword}
                   onChange={(e) => setLoginPassword(e.target.value)}
-                  placeholder="Masukkan password"
-                  className="w-full p-3.5 pl-10 pr-10 rounded-xl border border-[#E4E9E6] bg-[#F8FAF9] text-sm text-[#1E2923] font-semibold focus:border-[#05C46B] outline-none placeholder:text-slate-400 placeholder:opacity-50"
+                  placeholder="Masukkan password Anda..."
+                  className="w-full p-3.5 pl-10 pr-10 rounded-2xl border border-[#E4E9E6] bg-[#F8FAF9] text-sm text-[#1E2923] font-semibold outline-none focus:border-[#05C46B] transition-colors"
                 />
-                <Lock className="w-4 h-4 text-[#6B7C72] absolute left-3.5 top-4" />
+                <Lock className="w-4 h-4 text-[#6B7C72] absolute left-3.5" />
                 <button
                   type="button"
                   onClick={() => setShowLoginPassword(!showLoginPassword)}
-                  className="absolute right-3.5 top-4 text-[#6B7C72] hover:text-[#1E2923]"
+                  className="absolute right-3.5 text-[#6B7C72] hover:text-[#1E2923]"
                 >
                   {showLoginPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
@@ -197,9 +201,9 @@ export default function AuthPage() {
 
             <button
               type="submit"
-              className="w-full py-3.5 bg-[#05C46B] hover:bg-[#04A75B] text-white font-extrabold text-sm rounded-xl shadow-lg shadow-[#05C46B]/25 transition-all flex items-center justify-center space-x-2"
+              className="w-full py-3.5 bg-[#05C46B] hover:bg-[#04A75B] text-white font-black text-sm rounded-2xl shadow-md shadow-[#05C46B]/20 flex items-center justify-center space-x-2 transition-all hover:scale-[1.01]"
             >
-              <span>{t('loginBtn')}</span>
+              <span>{t('loginNow')}</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </form>
@@ -207,7 +211,7 @@ export default function AuthPage() {
           /* REGISTER FORM */
           <form onSubmit={handleRegisterSubmit} className="space-y-4">
             <div>
-              <label className="block text-xs font-bold text-[#1E2923] uppercase mb-1">
+              <label className="block text-[11px] font-extrabold text-[#1E2923] uppercase mb-1">
                 {t('fullName')}
               </label>
               <input
@@ -215,157 +219,148 @@ export default function AuthPage() {
                 required
                 value={regFullName}
                 onChange={(e) => setRegFullName(e.target.value)}
-                placeholder="Masukkan nama lengkap sesuai identitas"
-                className="w-full p-3 rounded-xl border border-[#E4E9E6] bg-[#F8FAF9] text-sm text-[#1E2923] font-semibold focus:border-[#05C46B] outline-none placeholder:text-slate-400 placeholder:opacity-50"
+                placeholder="e.g. Khuzaima Filla Januartha"
+                className="w-full p-3 rounded-xl border border-[#E4E9E6] bg-[#F8FAF9] text-sm text-[#1E2923] font-semibold outline-none focus:border-[#05C46B]"
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-bold text-[#1E2923] uppercase mb-1">
-                  {t('email')}
-                </label>
+            <div>
+              <label className="block text-[11px] font-extrabold text-[#1E2923] uppercase mb-1">
+                {t('email')}
+              </label>
+              <input
+                type="email"
+                required
+                value={regEmail}
+                onChange={(e) => setRegEmail(e.target.value)}
+                placeholder="nama@email.com"
+                className="w-full p-3 rounded-xl border border-[#E4E9E6] bg-[#F8FAF9] text-sm text-[#1E2923] font-semibold outline-none focus:border-[#05C46B]"
+              />
+            </div>
+
+            <div>
+              <label className="block text-[11px] font-extrabold text-[#1E2923] uppercase mb-1">
+                {t('username')}
+              </label>
+              <input
+                type="text"
+                required
+                value={regUsername}
+                onChange={(e) => setRegUsername(e.target.value)}
+                placeholder="khuzaimafilla"
+                className="w-full p-3 rounded-xl border border-[#E4E9E6] bg-[#F8FAF9] text-sm text-[#1E2923] font-semibold outline-none focus:border-[#05C46B]"
+              />
+            </div>
+
+            <div>
+              <label className="block text-[11px] font-extrabold text-[#1E2923] uppercase mb-1">
+                {t('password')}
+              </label>
+              <div className="relative flex items-center">
                 <input
-                  type="email"
+                  type={showRegPassword ? 'text' : 'password'}
                   required
-                  value={regEmail}
-                  onChange={(e) => setRegEmail(e.target.value)}
-                  placeholder="Masukkan alamat email aktif"
-                  className="w-full p-3 rounded-xl border border-[#E4E9E6] bg-[#F8FAF9] text-sm text-[#1E2923] font-semibold focus:border-[#05C46B] outline-none placeholder:text-slate-400 placeholder:opacity-50"
+                  value={regPassword}
+                  onChange={(e) => setRegPassword(e.target.value)}
+                  placeholder="Password aman..."
+                  className="w-full p-3 pr-10 rounded-xl border border-[#E4E9E6] bg-[#F8FAF9] text-sm text-[#1E2923] font-semibold outline-none focus:border-[#05C46B]"
                 />
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-[#1E2923] uppercase mb-1">
-                  {t('username')}
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={regUsername}
-                  onChange={(e) => setRegUsername(e.target.value)}
-                  placeholder="Pilih username unik"
-                  className="w-full p-3 rounded-xl border border-[#E4E9E6] bg-[#F8FAF9] text-sm text-[#1E2923] font-semibold focus:border-[#05C46B] outline-none placeholder:text-slate-400 placeholder:opacity-50"
-                />
+                <button
+                  type="button"
+                  onClick={() => setShowRegPassword(!showRegPassword)}
+                  className="absolute right-3 text-[#6B7C72] hover:text-[#1E2923]"
+                >
+                  {showRegPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-bold text-[#1E2923] uppercase mb-1">
-                  {t('password')}
-                </label>
-                <div className="relative">
-                  <input
-                    type={showRegPassword ? 'text' : 'password'}
-                    required
-                    value={regPassword}
-                    onChange={(e) => setRegPassword(e.target.value)}
-                    placeholder="Buat password minimal 6 karakter"
-                    className="w-full p-3 pr-9 rounded-xl border border-[#E4E9E6] bg-[#F8FAF9] text-sm text-[#1E2923] font-semibold focus:border-[#05C46B] outline-none placeholder:text-slate-400 placeholder:opacity-50 text-xs"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowRegPassword(!showRegPassword)}
-                    className="absolute right-2.5 top-3.5 text-[#6B7C72] hover:text-[#1E2923]"
-                  >
-                    {showRegPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                  </button>
-                </div>
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-[#1E2923] uppercase mb-1">
-                  {t('confirmPassword')}
-                </label>
-                <div className="relative">
-                  <input
-                    type={showRegConfirmPassword ? 'text' : 'password'}
-                    required
-                    value={regConfirmPassword}
-                    onChange={(e) => setRegConfirmPassword(e.target.value)}
-                    placeholder="Ulangi password"
-                    className="w-full p-3 pr-9 rounded-xl border border-[#E4E9E6] bg-[#F8FAF9] text-sm text-[#1E2923] font-semibold focus:border-[#05C46B] outline-none placeholder:text-slate-400 placeholder:opacity-50 text-xs"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowRegConfirmPassword(!showRegConfirmPassword)}
-                    className="absolute right-2.5 top-3.5 text-[#6B7C72] hover:text-[#1E2923]"
-                  >
-                    {showRegConfirmPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                  </button>
-                </div>
+            <div>
+              <label className="block text-[11px] font-extrabold text-[#1E2923] uppercase mb-1">
+                {t('confirmPassword')}
+              </label>
+              <div className="relative flex items-center">
+                <input
+                  type={showRegConfirmPassword ? 'text' : 'password'}
+                  required
+                  value={regConfirmPassword}
+                  onChange={(e) => setRegConfirmPassword(e.target.value)}
+                  placeholder="Ulangi password..."
+                  className="w-full p-3 pr-10 rounded-xl border border-[#E4E9E6] bg-[#F8FAF9] text-sm text-[#1E2923] font-semibold outline-none focus:border-[#05C46B]"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowRegConfirmPassword(!showRegConfirmPassword)}
+                  className="absolute right-3 text-[#6B7C72] hover:text-[#1E2923]"
+                >
+                  {showRegConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
               </div>
             </div>
 
-            {/* Trading Style Selector */}
-            <div className="p-3.5 rounded-2xl bg-[#E6F7F0]/60 border border-[#05C46B]/30">
-              <label className="block text-xs font-extrabold text-[#1E2923] uppercase mb-1">
+            {/* Trading Style Selection */}
+            <div>
+              <label className="block text-[11px] font-extrabold text-[#1E2923] uppercase mb-1">
                 {t('selectTradingStyle')}
               </label>
-
-              <div className="grid grid-cols-3 gap-2 my-2">
-                {(['Swing Trade', 'Intraday', 'Scalping'] as TradingStyle[]).map((style) => (
+              <div className="grid grid-cols-3 gap-2">
+                {(['Scalping', 'Intraday', 'Swing Trade'] as TradingStyle[]).map((style) => (
                   <button
                     key={style}
                     type="button"
                     onClick={() => setRegTradingStyle(style)}
-                    className={`py-2 rounded-xl text-xs font-extrabold border transition-all ${
+                    className={`py-2 rounded-xl text-xs font-bold transition-all ${
                       regTradingStyle === style
-                        ? 'bg-[#05C46B] text-white border-[#05C46B] shadow-sm'
-                        : 'bg-white text-[#1E2923] border-[#E4E9E6]'
+                        ? 'bg-[#05C46B] text-white shadow-sm'
+                        : 'bg-[#F8FAF9] border border-[#E4E9E6] text-[#6B7C72] hover:text-[#1E2923]'
                     }`}
                   >
                     {style}
                   </button>
                 ))}
               </div>
-
-              <div className="flex items-start space-x-1.5 mt-2 text-[#FF4D4D]">
-                <ShieldAlert className="w-4 h-4 shrink-0 mt-0.5" />
-                <p className="text-[11px] font-bold italic leading-tight">
-                  "{t('tradingStyleWarning')}"
-                </p>
-              </div>
+              <p className="text-[10px] text-[#6B7C72] mt-1 italic">
+                {t('tradingStyleWarning')}
+              </p>
             </div>
 
-            {/* Mandatory Checkboxes required by prompt */}
-            <div className="space-y-3 pt-2">
-              <label className="flex items-start space-x-3 p-3 rounded-xl bg-[#F8FAF9] border border-[#E4E9E6] cursor-pointer hover:border-[#05C46B]/50 transition-colors">
+            {/* Mandatory Checkboxes */}
+            <div className="space-y-2 pt-2 border-t border-[#E4E9E6]">
+              <label className="flex items-start space-x-2 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={isAgreedTamak}
                   onChange={(e) => setIsAgreedTamak(e.target.checked)}
-                  className="w-4 h-4 mt-0.5 accent-[#05C46B] rounded"
+                  className="mt-0.5 rounded text-[#05C46B] focus:ring-[#05C46B]"
                 />
-                <span className="text-xs font-semibold text-[#1E2923] leading-snug">
-                  "{t('checkboxTamak')}"
+                <span className="text-[10px] text-[#6B7C72] font-semibold leading-tight">
+                  {t('checkboxTamak')}
                 </span>
               </label>
 
-              <label className="flex items-start space-x-3 p-3 rounded-xl bg-[#F8FAF9] border border-[#E4E9E6] cursor-pointer hover:border-[#05C46B]/50 transition-colors">
+              <label className="flex items-start space-x-2 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={isAgreedFillaRichest}
                   onChange={(e) => setIsAgreedFillaRichest(e.target.checked)}
-                  className="w-4 h-4 mt-0.5 accent-[#05C46B] rounded"
+                  className="mt-0.5 rounded text-[#05C46B] focus:ring-[#05C46B]"
                 />
-                <span className="text-xs font-semibold text-[#1E2923] leading-snug">
-                  "{t('checkboxFillaRichest')}"
+                <span className="text-[10px] text-[#6B7C72] font-semibold leading-tight">
+                  {t('checkboxFillaRichest')}
                 </span>
               </label>
             </div>
 
-            {/* Register Button - Disabled validation state (Point 9) */}
             <button
               type="submit"
-              disabled={isRegisterDisabled}
-              className={`w-full py-3.5 font-extrabold text-sm rounded-xl transition-all flex items-center justify-center space-x-2 mt-4 ${
-                isRegisterDisabled
-                  ? 'bg-slate-300 text-slate-500 cursor-not-allowed opacity-60 shadow-none'
-                  : 'bg-[#05C46B] hover:bg-[#04A75B] text-white shadow-lg shadow-[#05C46B]/25'
+              disabled={!isAgreedTamak || !isAgreedFillaRichest}
+              className={`w-full py-3 rounded-2xl font-black text-sm transition-all ${
+                isAgreedTamak && isAgreedFillaRichest
+                  ? 'bg-[#05C46B] hover:bg-[#04A75B] text-white shadow-md shadow-[#05C46B]/20 cursor-pointer'
+                  : 'bg-[#E4E9E6] text-[#6B7C72] cursor-not-allowed'
               }`}
             >
-              <span>{t('registerBtn')}</span>
-              <ArrowRight className="w-4 h-4" />
+              {t('registerBtn')}
             </button>
           </form>
         )}

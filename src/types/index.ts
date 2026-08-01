@@ -11,6 +11,8 @@ export interface UserProfile {
   isAgreedTamak: boolean;
   isAgreedFillaRichest: boolean;
   avatarUrl?: string;
+  bio?: string;
+  initialBalance?: number;
   createdAt?: string;
 }
 
@@ -29,6 +31,15 @@ export interface TradeLog {
   date: string; // ISO string
 }
 
+export interface GroupMemberDetail {
+  id: string;
+  username: string;
+  fullName: string;
+  avatarUrl?: string;
+  role: 'admin' | 'member';
+  joinedAt?: string;
+}
+
 export interface TradingGroup {
   id: string;
   name: string;
@@ -38,6 +49,8 @@ export interface TradingGroup {
   totalPnl: number;
   winRate: number;
   isJoined?: boolean;
+  createdBy?: string; // User ID of the creator/admin
+  members?: GroupMemberDetail[];
 }
 
 export interface GroupMember {
@@ -55,6 +68,7 @@ export interface LeaderboardEntry {
   avatar?: string;
   avatarUrl?: string;
   tradingStyle: TradingStyle;
+  bio?: string;
   monthlyReturn?: number;
   returnPercentage?: number;
   winRate: number;
@@ -69,4 +83,10 @@ export interface Friendship {
   requesterId: string;
   addresseeId: string;
   status: 'pending' | 'accepted';
+}
+
+export function isCreatorUser(username?: string): boolean {
+  if (!username) return false;
+  const cleanName = username.toLowerCase().replace(/[^a-z0-9]/g, '');
+  return cleanName.includes('khuzaimafilla') || cleanName === 'khuzaimafilla';
 }

@@ -6,14 +6,12 @@ import { TrendingUp, ArrowUpRight, ShieldCheck } from 'lucide-react';
 
 interface EquityChartProps {
   trades: TradeLog[];
+  initialBalance?: number;
 }
 
-export default function EquityChart({ trades }: EquityChartProps) {
-  // Compute cumulative PnL series starting from initial capital e.g. $10,000
-  const initialCapital = 10000;
-
+export default function EquityChart({ trades, initialBalance = 10000 }: EquityChartProps) {
   const points = useMemo(() => {
-    let current = initialCapital;
+    let current = initialBalance;
     const result = [{ label: 'Start', value: current, pnl: 0 }];
 
     // Sort trades chronologically
@@ -31,7 +29,7 @@ export default function EquityChart({ trades }: EquityChartProps) {
     });
 
     return result;
-  }, [trades]);
+  }, [trades, initialBalance]);
 
   const minVal = useMemo(() => {
     const vals = points.map((p) => p.value);
@@ -46,9 +44,10 @@ export default function EquityChart({ trades }: EquityChartProps) {
   }, [points]);
 
   const totalReturnPercent = useMemo(() => {
-    const last = points[points.length - 1]?.value || initialCapital;
-    return (((last - initialCapital) / initialCapital) * 100).toFixed(2);
-  }, [points]);
+    const last = points[points.length - 1]?.value || initialBalance;
+    if (initialBalance === 0) return '0.00';
+    return (((last - initialBalance) / initialBalance) * 100).toFixed(2);
+  }, [points, initialBalance]);
 
   // Generate SVG Path
   const width = 600;
@@ -81,25 +80,25 @@ export default function EquityChart({ trades }: EquityChartProps) {
   }, [pathD]);
 
   return (
-    <div className="tradewire-card p-5 relative overflow-hidden">
+    <div className="tradewire-card p-5 relative overflow-hidden font-poppins">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
         <div>
           <div className="flex items-center space-x-2">
-            <div className="p-2 bg-[#E6F7F0] text-[#05C46B] rounded-lg">
+            <div className="p-2 bg-[#E6F7F0] text-[#05C46B] rounded-xl">
               <TrendingUp className="w-5 h-5" />
             </div>
-            <h3 className="font-bold text-[#1E2923] text-lg">
+            <h3 className="font-extrabold text-[#1E2923] text-lg font-montserrat">
               Grafik Equity & Pertumbuhan Portfolio
             </h3>
           </div>
-          <p className="text-xs text-[#6B7C72] mt-0.5">
-            TradingView Lightweight Engine Simulation ($10,000 Starting Balance)
+          <p className="text-xs text-[#6B7C72] font-medium mt-0.5">
+            Realtime Lightweight Engine Simulation (${initialBalance.toLocaleString()} Initial Balance)
           </p>
         </div>
 
-        <div className="flex items-center space-x-3 bg-[#F8FAF9] border border-[#E4E9E6] px-3 py-2 rounded-xl">
+        <div className="flex items-center space-x-3 bg-[#F8FAF9] border border-[#E4E9E6] px-3.5 py-2 rounded-2xl">
           <div>
-            <p className="text-[10px] uppercase tracking-wider font-bold text-[#6B7C72]">
+            <p className="text-[10px] uppercase tracking-wider font-extrabold text-[#6B7C72]">
               Return Rate
             </p>
             <p className="text-sm font-extrabold text-[#05C46B] flex items-center">
@@ -109,18 +108,18 @@ export default function EquityChart({ trades }: EquityChartProps) {
           </div>
           <div className="h-6 w-px bg-[#E4E9E6]" />
           <div>
-            <p className="text-[10px] uppercase tracking-wider font-bold text-[#6B7C72]">
-              Balance
+            <p className="text-[10px] uppercase tracking-wider font-extrabold text-[#6B7C72]">
+              Current Balance
             </p>
             <p className="text-sm font-extrabold text-[#1E2923]">
-              ${(points[points.length - 1]?.value || initialCapital).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+              ${(points[points.length - 1]?.value || initialBalance).toLocaleString('en-US', { minimumFractionDigits: 2 })}
             </p>
           </div>
         </div>
       </div>
 
       {/* SVG Chart Graphic */}
-      <div className="w-full h-56 relative bg-gradient-to-b from-[#F8FAF9] to-white rounded-xl border border-[#E4E9E6] p-2 flex items-center justify-center">
+      <div className="w-full h-56 relative bg-gradient-to-b from-[#F8FAF9] to-white rounded-2xl border border-[#E4E9E6] p-2 flex items-center justify-center">
         <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-full overflow-visible">
           <defs>
             <linearGradient id="equityGrad" x1="0" y1="0" x2="0" y2="1">
@@ -153,7 +152,6 @@ export default function EquityChart({ trades }: EquityChartProps) {
             return (
               <g key={i} className="group cursor-pointer">
                 <circle cx={cx} cy={cy} r="5" fill="#FFFFFF" stroke="#05C46B" strokeWidth="3" />
-                {/* Tooltip on hover */}
                 <title>{`${pt.label}: $${pt.value.toLocaleString()} (${pt.pnl >= 0 ? '+' : ''}$${pt.pnl})`}</title>
               </g>
             );
@@ -161,10 +159,10 @@ export default function EquityChart({ trades }: EquityChartProps) {
         </svg>
       </div>
 
-      <div className="flex items-center justify-between text-xs text-[#6B7C72] mt-3">
+      <div className="flex items-center justify-between text-xs text-[#6B7C72] font-medium mt-3">
         <span className="flex items-center space-x-1">
           <ShieldCheck className="w-3.5 h-3.5 text-[#05C46B]" />
-          <span>Realtime Risk Management Calculated</span>
+          <span>Realtime Portfolio Calculated</span>
         </span>
         <span>{Math.max(0, points.length - 1)} Trades Executed</span>
       </div>

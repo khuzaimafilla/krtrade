@@ -7,7 +7,7 @@ export const translations: Record<Language, Record<string, string>> = {
     appSubtitle: 'BETA Version 0.0.0.1',
     dashboard: 'Dashboard',
     journal: 'Jurnal Trading',
-    community: 'Komunitas / Group',
+    community: 'Komunitas',
     leaderboard: 'Leaderboard',
     settings: 'Pengaturan',
     logout: 'Keluar',
@@ -18,13 +18,13 @@ export const translations: Record<Language, Record<string, string>> = {
     close: 'Tutup',
 
     // Welcome Page
-    welcomeHeader: 'Selamat Datang di Aplikasi Pencatatan Orang Kaya!',
-    welcomeSubHeader: 'Portal Jurnal & Komunitas Trading 9 Naga',
+    welcomeHeader: 'Selamat Datang di KRtrade Trading Platform!',
+    welcomeSubHeader: 'Portal Jurnal & Komunitas Trading Profesional',
     nextButton: 'Selanjutnya',
-    
+
     // Auth Page
-    loginTitle: 'Masuk Akun Orang Kaya',
-    registerTitle: 'Daftar Akun Calon 9 Naga',
+    loginTitle: 'Masuk ke Akun KRtrade',
+    registerTitle: 'Daftar Akun KRtrade Baru',
     emailOrUsername: 'Username / Email',
     fullName: 'Nama Lengkap',
     email: 'Email',
@@ -42,20 +42,14 @@ export const translations: Record<Language, Record<string, string>> = {
     registerNow: 'Daftar Sekarang',
     loginNow: 'Masuk Sekarang',
 
-    // OTP Modal
-    otpTitle: 'Verifikasi Kode OTP 6-Digit',
-    otpDesc: 'Masukkan kode OTP 6-digit yang kami simulasikan/kirimkan ke email Anda untuk menyelesaikan login.',
-    verifyBtn: 'Verifikasi & Masuk',
-    resendOtp: 'Kirim Ulang Kode OTP',
-
     // Trading Style & Agreements
     selectTradingStyle: 'Pilih gaya trading anda:',
-    tradingStyleWarning: 'Anda tidak bisa ubah gaya trading anda, 1 aja jangan kebanyakan gaya!',
+    tradingStyleWarning: 'Gaya trading yang dipilih akan dikunci untuk menjaga disiplin strategi.',
     checkboxTamak: 'Saya telah berjanji bahwa saya adalah seorang trader yang tidak TAMAK dan akan memprioritaskan Money dan Risk Management untuk menjaga Psikologi dan Overtrade',
     checkboxFillaRichest: 'Saya mengakui bahwa Filla adalah orang paling kaya di dunia',
 
     // Dashboard
-    greetingBanner: 'Welcome back, Filla! On track to 9 Naga level today? 📈🐉',
+    greetingBanner: 'Welcome back, King!',
     totalPnl: 'Total PnL ($)',
     winRate: 'Win Rate (%)',
     profitFactor: 'Profit Factor',
@@ -67,7 +61,7 @@ export const translations: Record<Language, Record<string, string>> = {
 
     // Journal
     journalTitle: 'Jurnal Trading Log',
-    addTradeBtn: '+ Catat Transaksi Baru',
+    addTradeBtn: 'Catat Transaksi Baru',
     pair: 'Pair / Asset',
     type: 'Tipe Position',
     entryPrice: 'Harga Entry',
@@ -100,7 +94,7 @@ export const translations: Record<Language, Record<string, string>> = {
     leaderboardTitle: 'KRtrade Multi-Filter Leaderboard',
     tabFriends: 'Friends Only',
     tabCommunity: 'Community Members',
-    tabGlobal: 'Global 9 Naga',
+    tabGlobal: 'Global Leaderboard',
     filterAllStyles: 'All Methods',
     filterScalping: 'Scalping',
     filterIntraday: 'Intraday',
@@ -126,7 +120,7 @@ export const translations: Record<Language, Record<string, string>> = {
     appSubtitle: 'BETA Version 0.0.0.1',
     dashboard: 'Dashboard',
     journal: 'Trading Journal',
-    community: 'Community / Groups',
+    community: 'Community',
     leaderboard: 'Leaderboard',
     settings: 'Settings',
     logout: 'Logout',
@@ -137,13 +131,13 @@ export const translations: Record<Language, Record<string, string>> = {
     close: 'Close',
 
     // Welcome Page
-    welcomeHeader: 'Welcome to the Wealthy People Recording App!',
-    welcomeSubHeader: 'Journal Portal & Community for 9 Naga Traders',
+    welcomeHeader: 'Welcome to KRtrade Trading Platform!',
+    welcomeSubHeader: 'Professional Trading Journal & Community Portal',
     nextButton: 'Next',
 
     // Auth Page
-    loginTitle: 'Login to Wealthy Account',
-    registerTitle: 'Register Future 9 Naga Account',
+    loginTitle: 'Login to KRtrade Account',
+    registerTitle: 'Register KRtrade Account',
     emailOrUsername: 'Username / Email',
     fullName: 'Full Name',
     email: 'Email',
@@ -161,20 +155,14 @@ export const translations: Record<Language, Record<string, string>> = {
     registerNow: 'Register Now',
     loginNow: 'Login Now',
 
-    // OTP Modal
-    otpTitle: 'Verify 6-Digit Email OTP',
-    otpDesc: 'Enter the simulated 6-digit OTP sent to your email to complete your login.',
-    verifyBtn: 'Verify & Access',
-    resendOtp: 'Resend OTP Code',
-
     // Trading Style & Agreements
     selectTradingStyle: 'Select your trading style:',
-    tradingStyleWarning: 'Anda tidak bisa ubah gaya trading anda, 1 aja jangan kebanyakan gaya!',
+    tradingStyleWarning: 'Selected trading style is locked to enforce strategy discipline.',
     checkboxTamak: 'Saya telah berjanji bahwa saya adalah seorang trader yang tidak TAMAK dan akan memprioritaskan Money dan Risk Management untuk menjaga Psikologi dan Overtrade',
     checkboxFillaRichest: 'Saya mengakui bahwa Filla adalah orang paling kaya di dunia',
 
     // Dashboard
-    greetingBanner: 'Welcome back, Filla! On track to 9 Naga level today? 📈🐉',
+    greetingBanner: 'Welcome back, King!',
     totalPnl: 'Total PnL ($)',
     winRate: 'Win Rate (%)',
     profitFactor: 'Profit Factor',
@@ -219,7 +207,7 @@ export const translations: Record<Language, Record<string, string>> = {
     leaderboardTitle: 'KRtrade Multi-Filter Leaderboard',
     tabFriends: 'Friends Only',
     tabCommunity: 'Community Members',
-    tabGlobal: 'Global 9 Naga',
+    tabGlobal: 'Global Leaderboard',
     filterAllStyles: 'All Methods',
     filterScalping: 'Scalping',
     filterIntraday: 'Intraday',
