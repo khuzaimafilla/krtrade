@@ -26,8 +26,13 @@ export const metadata: Metadata = {
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
-    statusBarStyle: "default",
+    statusBarStyle: "black-translucent",
     title: "KRtrade",
+  },
+  icons: {
+    icon: "/logo.png",
+    shortcut: "/logo.png",
+    apple: "/logo.png",
   },
   formatDetection: {
     telephone: false,
@@ -35,7 +40,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#05C46B",
+  themeColor: "#042f2e",
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
