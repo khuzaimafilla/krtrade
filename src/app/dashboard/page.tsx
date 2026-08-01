@@ -29,11 +29,12 @@ export default function DashboardPage() {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setTrades(getStoredTrades());
     setMounted(true);
-  }, []);
+    setTrades(getStoredTrades());
+  }, [user]);
 
   // Compute Metrics
+  const currency = user?.accountCurrency || 'USD';
   const initialBalance = user?.initialBalance || 10000;
   const totalPnl = trades.reduce((sum, trd) => sum + trd.pnl, 0);
   const currentBalance = initialBalance + totalPnl;
@@ -136,7 +137,7 @@ export default function DashboardPage() {
             </div>
           </div>
           <p className={`text-xl sm:text-2xl font-extrabold ${totalPnl >= 0 ? 'text-[#05C46B]' : 'text-[#FF4D4D]'}`}>
-            {totalPnl >= 0 ? '+' : ''}${totalPnl.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+            {totalPnl >= 0 ? '+' : ''}{formatCurrencyAmount(Math.abs(totalPnl), currency)}
           </p>
           <p className="text-[10px] text-[#6B7C72] font-medium mt-1">Net Cumulative PnL</p>
         </div>
@@ -198,11 +199,11 @@ export default function DashboardPage() {
             </p>
           </div>
           <div className="px-3 py-1 rounded-full bg-[#E6F7F0] text-[#05C46B] text-xs font-extrabold border border-[#05C46B]/30">
-            Initial: ${initialBalance.toLocaleString()}
+            Initial: {formatCurrencyAmount(initialBalance, currency)}
           </div>
         </div>
 
-        <EquityChart trades={trades} initialBalance={initialBalance} />
+        <EquityChart trades={trades} initialBalance={initialBalance} currency={currency} />
       </div>
 
       {/* Recent Trades Table */}
@@ -223,9 +224,8 @@ export default function DashboardPage() {
         {recentTrades.length === 0 ? (
           <div className="text-center py-10 text-[#6B7C72]">
             <p className="text-sm font-bold">Belum ada transaksi trading dicatat.</p>
-            <p className="text-sm font-bold">Belum ada transaksi jurnal teratas.</p>
             <p className="text-xs mt-1">
-              Klik tombol <strong className="text-[#05C46B] font-extrabold">"+ Catat Transaksi Baru"</strong> di atas untuk mulai mencatat transaksi pertama Anda!
+              Klik tombol <strong className="text-[#05C46B] font-extrabold">&ldquo;+ Catat Transaksi Baru&rdquo;</strong> di atas untuk mulai mencatat transaksi pertama Anda!
             </p>
           </div>
         ) : (
@@ -273,7 +273,7 @@ export default function DashboardPage() {
                         trd.pnl >= 0 ? 'text-[#05C46B]' : 'text-[#FF4D4D]'
                       }`}
                     >
-                      {trd.pnl >= 0 ? '+' : ''}${trd.pnl.toFixed(2)}
+                      {trd.pnl >= 0 ? '+' : ''}{formatCurrencyAmount(Math.abs(trd.pnl), currency)}
                     </td>
                   </tr>
                 ))}

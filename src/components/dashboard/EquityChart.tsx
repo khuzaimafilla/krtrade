@@ -1,15 +1,16 @@
 'use client';
 
 import React, { useMemo } from 'react';
-import { TradeLog } from '@/types';
+import { TradeLog, AccountCurrency, formatCurrencyAmount } from '@/types';
 import { TrendingUp, ArrowUpRight, ShieldCheck } from 'lucide-react';
 
 interface EquityChartProps {
   trades: TradeLog[];
   initialBalance?: number;
+  currency?: AccountCurrency;
 }
 
-export default function EquityChart({ trades, initialBalance = 10000 }: EquityChartProps) {
+export default function EquityChart({ trades, initialBalance = 10000, currency = 'USD' }: EquityChartProps) {
   const points = useMemo(() => {
     let current = initialBalance;
     const result = [{ label: 'Start', value: current, pnl: 0 }];
@@ -92,7 +93,7 @@ export default function EquityChart({ trades, initialBalance = 10000 }: EquityCh
             </h3>
           </div>
           <p className="text-xs text-[#6B7C72] font-medium mt-0.5">
-            Realtime Lightweight Engine Simulation (${initialBalance.toLocaleString()} Initial Balance)
+            Realtime Lightweight Engine Simulation ({formatCurrencyAmount(initialBalance, currency)} Initial Balance)
           </p>
         </div>
 
@@ -112,7 +113,7 @@ export default function EquityChart({ trades, initialBalance = 10000 }: EquityCh
               Current Balance
             </p>
             <p className="text-sm font-extrabold text-[#1E2923]">
-              ${(points[points.length - 1]?.value || initialBalance).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+              {formatCurrencyAmount(points[points.length - 1]?.value || initialBalance, currency)}
             </p>
           </div>
         </div>
@@ -152,7 +153,7 @@ export default function EquityChart({ trades, initialBalance = 10000 }: EquityCh
             return (
               <g key={i} className="group cursor-pointer">
                 <circle cx={cx} cy={cy} r="5" fill="#FFFFFF" stroke="#05C46B" strokeWidth="3" />
-                <title>{`${pt.label}: $${pt.value.toLocaleString()} (${pt.pnl >= 0 ? '+' : ''}$${pt.pnl})`}</title>
+                <title>{`${pt.label}: ${formatCurrencyAmount(pt.value, currency)} (${pt.pnl >= 0 ? '+' : ''}${formatCurrencyAmount(pt.pnl, currency)})`}</title>
               </g>
             );
           })}

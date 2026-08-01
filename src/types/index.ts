@@ -100,12 +100,11 @@ export function formatCurrencyAmount(
   currency: AccountCurrency = 'USD'
 ): string {
   if (currency === 'IDR') {
-    const idrVal = Math.round(amount * 15500);
-    return `Rp ${idrVal.toLocaleString('id-ID')}`;
+    return `Rp ${Math.round(amount).toLocaleString('id-ID')}`;
   }
   if (currency === 'CENT') {
-    const centVal = Math.round(amount * 100);
-    return `${centVal.toLocaleString('en-US')} USc`;
+    // Amount is already in USc (cent), just format with USc label
+    return `${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USc`;
   }
   return `$${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }

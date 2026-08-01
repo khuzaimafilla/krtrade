@@ -150,15 +150,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     let resolvedEmail = emailOrUser.trim();
 
     if (isSupabaseConfigured) {
+      // If input is a username (no @), look up the actual email from profiles
       if (!emailOrUser.includes('@')) {
         const { data: foundProfile } = await supabase
           .from('profiles')
-          .select('id, username')
-          .eq('username', emailOrUser)
+          .select('id, username, email')
+          .ilike('username', emailOrUser.trim())
           .single();
 
-        if (foundProfile) {
-          resolvedEmail = `${emailOrUser}@krtrade.com`;
+        if (foundProfile?.email) {
+          // Use the actual registered email
+          resolvedEmail = foundProfile.email;
+        } else if (foundProfile) {
+          // Fallback: construct email from username pattern
+          resolvedEmail = `${emailOrUser.trim().toLowerCase()}@krtrade.com`;
         }
       }
 

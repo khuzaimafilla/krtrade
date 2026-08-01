@@ -8,6 +8,7 @@ import AddFriendModal from '@/components/modals/AddFriendModal';
 import UserProfileModal, { PublicUserProfile } from '@/components/modals/UserProfileModal';
 import CreatorBadge from '@/components/common/CreatorBadge';
 import { supabase, isSupabaseConfigured } from '@/lib/supabaseClient';
+import { getStoredGroups } from '@/lib/storage';
 import { Trophy, Users, UserCheck, Crown, UserPlus, RefreshCw, Eye } from 'lucide-react';
 
 export default function LeaderboardPage() {
@@ -21,11 +22,30 @@ export default function LeaderboardPage() {
   const [selectedUser, setSelectedUser] = useState<PublicUserProfile | null>(null);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
-  // Scope Switcher Tabs: [ Friends Only | Community Members | Global ]
-  const [scopeTab, setScopeTab] = useState<'friends' | 'community' | 'global'>('global');
+  // Scope Switcher Tabs: Friends Only | Community Members
+  const [scopeTab, setScopeTab] = useState<'friends' | 'community'>('friends');
 
-  // Trading Style Filters: [ All Methods | Scalping | Intraday | Swing Trade ]
+  // Trading Style Filters
   const [styleFilter, setStyleFilter] = useState<'ALL' | TradingStyle>('ALL');
+
+  // Community group IDs the user is a member of
+  const [userGroupIds, setUserGroupIds] = useState<Set<string>>(new Set());
+
+  // Friend user IDs (accepted)
+  const [friendIds, setFriendIds] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    // Load community groups to know which community members to show
+    const stored = getStoredGroups();
+    const userJoinedKey = currentUser ? `krtrade_joined_${currentUser.id}` : 'krtrade_joined_guest';
+    const joinedRaw = typeof window !== 'undefined' ? localStorage.getItem(userJoinedKey) : null;
+    const joinedIds: string[] = joinedRaw ? JSON.parse(joinedRaw) : [];
+    // Groups user is admin of or joined
+    const myGroupIds = new Set<string>(
+      stored.filter(g => g.isJoined || joinedIds.includes(g.id) || g.createdBy === currentUser?.id).map(g => g.id)
+    );
+    setUserGroupIds(myGroupIds);
+  }, [currentUser]);
 
   useEffect(() => {
     async function fetchLeaderboard() {
@@ -35,17 +55,21 @@ export default function LeaderboardPage() {
         try {
           const { data: profilesData } = await supabase.from('profiles').select('*');
           const { data: tradesData } = await supabase.from('trades').select('*');
-          const { data: friendshipsData } = await supabase.from('friendships').select('*');
+          const { data: friendshipsData } = await supabase
+            .from('friendships')
+            .select('*')
+            .eq('status', 'accepted'); // Only accepted friendships
+
+          const friendUserIds = new Set<string>();
+          if (currentUser && friendshipsData) {
+            friendshipsData.forEach((f) => {
+              if (f.requester_id === currentUser.id) friendUserIds.add(f.addressee_id);
+              if (f.addressee_id === currentUser.id) friendUserIds.add(f.requester_id);
+            });
+          }
+          setFriendIds(friendUserIds);
 
           if (profilesData && profilesData.length > 0) {
-            const friendUserIds = new Set<string>();
-            if (currentUser && friendshipsData) {
-              friendshipsData.forEach((f) => {
-                if (f.requester_id === currentUser.id) friendUserIds.add(f.addressee_id);
-                if (f.addressee_id === currentUser.id) friendUserIds.add(f.requester_id);
-              });
-            }
-
             const dbEntries: LeaderboardEntry[] = profilesData.map((p) => {
               const userTrades = tradesData ? tradesData.filter((t) => t.user_id === p.id) : [];
               const totalTrades = userTrades.length;
@@ -64,6 +88,7 @@ export default function LeaderboardPage() {
                 username: p.username,
                 fullName: finalFullName,
                 avatarUrl: finalAvatar,
+                bio: isMe ? currentUser?.bio : (p.bio || ''),
                 tradingStyle: p.trading_style as TradingStyle,
                 totalTrades,
                 winRate,
@@ -74,27 +99,23 @@ export default function LeaderboardPage() {
             });
 
             // Include Creator khuzaimafilla if not present in DB
-            const creatorSeed: LeaderboardEntry = {
-              id: 'usr_khuzaima',
-              rank: 0,
-              username: 'khuzaimafilla',
-              fullName: 'Khuzaima Filla (Developer)',
-              avatarUrl: (currentUser?.username.toLowerCase() === 'khuzaimafilla' && currentUser.avatarUrl)
-                ? currentUser.avatarUrl
-                : 'https://api.dicebear.com/7.x/avataaars/svg?seed=khuzaimafilla',
-              tradingStyle: 'Scalping',
-              totalTrades: 124,
-              winRate: 88,
-              returnPercentage: 450,
-              totalPnl: 45000,
-              isFriend: true,
-            };
-
             const existingUsernames = new Set(dbEntries.map((e) => e.username.toLowerCase()));
-
             if (!existingUsernames.has('khuzaimafilla')) {
-              dbEntries.push(creatorSeed);
-              existingUsernames.add('khuzaimafilla');
+              const isMe = currentUser?.username.toLowerCase() === 'khuzaimafilla';
+              dbEntries.push({
+                id: 'usr_khuzaima',
+                rank: 0,
+                username: 'khuzaimafilla',
+                fullName: isMe && currentUser?.fullName ? currentUser.fullName : 'Khuzaima Filla',
+                avatarUrl: (isMe && currentUser?.avatarUrl) ? currentUser.avatarUrl : 'https://api.dicebear.com/7.x/avataaars/svg?seed=khuzaimafilla',
+                bio: isMe ? currentUser?.bio : 'Developer & Creator KRtrade Platform.',
+                tradingStyle: 'Scalping',
+                totalTrades: 0,
+                winRate: 0,
+                returnPercentage: 0,
+                totalPnl: 0,
+                isFriend: Boolean(isMe || friendUserIds.has('usr_khuzaima')),
+              });
             }
 
             // Add current logged in user if not in DB
@@ -105,6 +126,7 @@ export default function LeaderboardPage() {
                 username: currentUser.username,
                 fullName: currentUser.fullName,
                 avatarUrl: currentUser.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${currentUser.username}`,
+                bio: currentUser.bio,
                 tradingStyle: currentUser.tradingStyle,
                 totalTrades: 0,
                 winRate: 0,
@@ -114,8 +136,8 @@ export default function LeaderboardPage() {
               });
             }
 
-            // Sort by Net PnL descending
-            dbEntries.sort((a, b) => b.totalPnl - a.totalPnl);
+            // Sort by Win Rate descending
+            dbEntries.sort((a, b) => b.winRate - a.winRate);
             dbEntries.forEach((e, idx) => { e.rank = idx + 1; });
 
             setLeaderboardEntries(dbEntries);
@@ -127,30 +149,34 @@ export default function LeaderboardPage() {
         }
       }
 
-      // Initial Base Leaderboard Records (with Creator khuzaimafilla)
-      const baseEntries: LeaderboardEntry[] = [
-        {
+      // Fallback - show current user only
+      const baseEntries: LeaderboardEntry[] = [];
+
+      if (currentUser?.username.toLowerCase() !== 'khuzaimafilla') {
+        baseEntries.push({
           id: 'usr_khuzaima',
           rank: 1,
           username: 'khuzaimafilla',
-          fullName: 'Khuzaima Filla (Developer)',
+          fullName: 'Khuzaima Filla',
           avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=khuzaimafilla',
+          bio: 'Developer & Creator KRtrade Platform.',
           tradingStyle: 'Scalping',
-          totalTrades: 124,
-          winRate: 88,
-          returnPercentage: 450,
-          totalPnl: 45000,
+          totalTrades: 0,
+          winRate: 0,
+          returnPercentage: 0,
+          totalPnl: 0,
           isFriend: true,
-        },
-      ];
+        });
+      }
 
-      if (currentUser && currentUser.username !== 'khuzaimafilla') {
+      if (currentUser) {
         baseEntries.push({
           id: currentUser.id,
-          rank: 2,
+          rank: baseEntries.length + 1,
           username: currentUser.username,
           fullName: currentUser.fullName,
           avatarUrl: currentUser.avatarUrl,
+          bio: currentUser.bio,
           tradingStyle: currentUser.tradingStyle,
           totalTrades: 0,
           winRate: 0,
@@ -172,20 +198,38 @@ export default function LeaderboardPage() {
     return leaderboardEntries.filter((entry) => {
       // Scope Filter
       if (scopeTab === 'friends' && !entry.isFriend) return false;
+      if (scopeTab === 'community') {
+        // Show users who are in any of the user's communities
+        // For now show all (community filtering would require group_members cross join)
+        if (!entry.isFriend && !userGroupIds.size) return false;
+      }
       // Style Filter
       if (styleFilter !== 'ALL' && entry.tradingStyle !== styleFilter) return false;
       return true;
     });
-  }, [leaderboardEntries, scopeTab, styleFilter]);
+  }, [leaderboardEntries, scopeTab, styleFilter, userGroupIds]);
 
-  const handleOpenUserPreview = (entry: LeaderboardEntry) => {
+  const handleOpenUserPreview = async (entry: LeaderboardEntry) => {
+    // Fetch real bio from DB if available
+    let bio = entry.bio || '';
+    if (isSupabaseConfigured && entry.id && !bio) {
+      try {
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('bio')
+          .eq('id', entry.id)
+          .single();
+        if (profileData?.bio) bio = profileData.bio;
+      } catch {}
+    }
+
     setSelectedUser({
       id: entry.id,
       username: entry.username,
       fullName: entry.fullName,
       avatarUrl: entry.avatarUrl,
       tradingStyle: entry.tradingStyle,
-      bio: entry.username === 'khuzaimafilla' ? 'Lead Architect & Creator of KRtrade Platform. Scalping Expert.' : 'Trader aktif KRtrade Platform.',
+      bio: bio || (entry.username === 'khuzaimafilla' ? 'Developer & Creator KRtrade Platform.' : 'Trader aktif KRtrade Platform.'),
       winRate: entry.winRate,
       totalPnl: entry.totalPnl,
       totalTrades: entry.totalTrades,
@@ -193,6 +237,8 @@ export default function LeaderboardPage() {
     });
     setIsProfileModalOpen(true);
   };
+
+  const hasCommunity = userGroupIds.size > 0;
 
   return (
     <div className="space-y-6 pb-16 md:pb-8 animate-fade-in font-poppins">
@@ -206,7 +252,7 @@ export default function LeaderboardPage() {
             <Crown className="w-6 h-6 text-[#D4AF37]" />
           </div>
           <p className="text-xs text-[#6B7C72] mt-1 font-medium">
-            Papan Peringkat Kinerja Trader Realtime & Transparan
+            Papan Peringkat Trader berdasarkan Win Rate — Diperbarui Real-time
           </p>
         </div>
 
@@ -224,16 +270,6 @@ export default function LeaderboardPage() {
         {/* Scope Tabs */}
         <div className="flex items-center space-x-2 border-b border-[#E4E9E6] pb-3 overflow-x-auto">
           <button
-            onClick={() => setScopeTab('global')}
-            className={`px-4 py-2 rounded-xl text-xs font-extrabold transition-all whitespace-nowrap ${
-              scopeTab === 'global'
-                ? 'bg-[#E6F7F0] text-[#05C46B] shadow-sm'
-                : 'text-[#6B7C72] hover:bg-[#F8FAF9]'
-            }`}
-          >
-            🌐 {t('globalRank')}
-          </button>
-          <button
             onClick={() => setScopeTab('friends')}
             className={`px-4 py-2 rounded-xl text-xs font-extrabold transition-all whitespace-nowrap ${
               scopeTab === 'friends'
@@ -242,6 +278,23 @@ export default function LeaderboardPage() {
             }`}
           >
             👥 {t('friendsOnly')}
+          </button>
+          <button
+            onClick={() => setScopeTab('community')}
+            disabled={!hasCommunity}
+            title={!hasCommunity ? 'Bergabung ke komunitas terlebih dahulu' : ''}
+            className={`px-4 py-2 rounded-xl text-xs font-extrabold transition-all whitespace-nowrap ${
+              scopeTab === 'community'
+                ? 'bg-[#E6F7F0] text-[#05C46B] shadow-sm'
+                : !hasCommunity
+                ? 'text-[#C0C8C4] cursor-not-allowed'
+                : 'text-[#6B7C72] hover:bg-[#F8FAF9]'
+            }`}
+          >
+            🏘️ Komunitas Saya
+            {!hasCommunity && (
+              <span className="ml-1 text-[9px] font-bold opacity-60">(Belum ada grup)</span>
+            )}
           </button>
         </div>
 
@@ -269,13 +322,19 @@ export default function LeaderboardPage() {
         {loading ? (
           <div className="p-12 text-center text-[#6B7C72]">
             <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-2 text-[#05C46B]" />
-            <p className="text-xs font-extrabold">Memuat Papan Peringkat Realtime...</p>
+            <p className="text-xs font-extrabold">Memuat Papan Peringkat...</p>
           </div>
         ) : filteredEntries.length === 0 ? (
           <div className="p-12 text-center text-[#6B7C72]">
             <Users className="w-10 h-10 mx-auto mb-2 opacity-50" />
-            <p className="text-sm font-bold">Tidak ada data trader yang cocok.</p>
-            <p className="text-xs mt-1">Coba ubah filter atau tambah teman baru.</p>
+            <p className="text-sm font-bold">
+              {scopeTab === 'friends' ? 'Belum ada teman yang ditambahkan.' : 'Belum bergabung ke komunitas manapun.'}
+            </p>
+            <p className="text-xs mt-1">
+              {scopeTab === 'friends'
+                ? 'Klik tombol "+ Tambah Teman" untuk mencari dan menambahkan teman.'
+                : 'Buka halaman Komunitas untuk bergabung atau buat grup Anda sendiri.'}
+            </p>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -286,14 +345,13 @@ export default function LeaderboardPage() {
                   <th className="p-3.5">Trader</th>
                   <th className="p-3.5">Gaya Trading</th>
                   <th className="p-3.5 text-center">Trades</th>
-                  <th className="p-3.5 text-center">Win Rate</th>
-                  <th className="p-3.5 text-right">Net PnL ($)</th>
+                  <th className="p-3.5 text-center">Win Rate ↓</th>
+                  <th className="p-3.5 text-right">Net PnL</th>
                   <th className="p-3.5 text-center">Profil</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#E4E9E6]">
                 {filteredEntries.map((entry) => {
-                  const isTop3 = entry.rank <= 3;
                   return (
                     <tr
                       key={entry.username}
@@ -319,7 +377,7 @@ export default function LeaderboardPage() {
                         )}
                       </td>
 
-                      {/* Trader Info Column with CreatorBadge */}
+                      {/* Trader Info Column */}
                       <td className="p-3.5">
                         <div className="flex items-center space-x-3">
                           <img
@@ -329,6 +387,9 @@ export default function LeaderboardPage() {
                             }
                             alt={entry.username}
                             className="w-9 h-9 rounded-full border border-[#05C46B] object-cover bg-white shrink-0"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${entry.username}`;
+                            }}
                           />
                           <div>
                             <div className="flex items-center space-x-1.5">
@@ -336,6 +397,11 @@ export default function LeaderboardPage() {
                                 {entry.fullName || entry.username}
                               </span>
                               <CreatorBadge username={entry.username} size="sm" />
+                              {entry.isFriend && entry.username !== currentUser?.username && (
+                                <span title="Teman">
+                                  <UserCheck className="w-3.5 h-3.5 text-[#05C46B]" />
+                                </span>
+                              )}
                             </div>
                             <span className="text-[10px] text-[#6B7C72] font-semibold">
                               @{entry.username}
@@ -370,7 +436,7 @@ export default function LeaderboardPage() {
                         {entry.totalPnl >= 0 ? '+' : ''}${entry.totalPnl.toLocaleString()}
                       </td>
 
-                      {/* View Profile Action */}
+                      {/* View Profile */}
                       <td className="p-3.5 text-center">
                         <button
                           type="button"

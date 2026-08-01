@@ -29,10 +29,10 @@ export default function ProfilePage() {
   const { t } = useLanguage();
   const { user, updateUser } = useAuth();
 
-  const [fullName, setFullName] = useState(user?.fullName || 'Filla Calon Wong Sugih');
-  const [email, setEmail] = useState(user?.email || 'filla.ferari@krtrade.com');
-  const [username, setUsername] = useState(user?.username || 'khuzaimafilla');
-  const [bio, setBio] = useState(user?.bio || 'Trader konsisten KRtrade Platform. Risk management first!');
+  const [fullName, setFullName] = useState(user?.fullName || '');
+  const [email, setEmail] = useState(user?.email || '');
+  const [username, setUsername] = useState(user?.username || '');
+  const [bio, setBio] = useState(user?.bio || '');
   const [initialBalance, setInitialBalance] = useState<string>(
     (user?.initialBalance !== undefined ? user.initialBalance : 10000).toString()
   );
@@ -40,7 +40,7 @@ export default function ProfilePage() {
     user?.accountCurrency || 'USD'
   );
   const [avatarUrl, setAvatarUrl] = useState(
-    user?.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.username || 'khuzaimafilla'}`
+    user?.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.username || 'trader'}`
   );
 
   const [savedSuccess, setSavedSuccess] = useState(false);
@@ -72,7 +72,7 @@ export default function ProfilePage() {
     setPendingAvatar(null);
     setIsConfirmSaveOpen(false);
     setSavedSuccess(true);
-    setTimeout(() => setSavedSuccess(false), 4000);
+    setTimeout(() => setSavedSuccess(false), 5000);
   };
 
   const handleImageSelected = async (file: File) => {
@@ -97,9 +97,12 @@ export default function ProfilePage() {
       </div>
 
       {savedSuccess && (
-        <div className="p-4 rounded-2xl bg-[#E6F7F0] border border-[#05C46B]/40 text-[#05C46B] font-bold text-sm flex items-center space-x-2 animate-fade-in shadow-sm">
-          <CheckCircle2 className="w-5 h-5 text-[#05C46B]" />
-          <span>Berhasil! Perubahan profil & foto profil Anda telah disimpan.</span>
+        <div className="p-4 rounded-2xl bg-[#E6F7F0] border border-[#05C46B]/40 text-[#05C46B] font-bold text-sm flex items-center space-x-2 shadow-md animate-fade-in">
+          <CheckCircle2 className="w-5 h-5 text-[#05C46B] shrink-0" />
+          <div>
+            <p className="font-extrabold">✅ Profil berhasil disimpan!</p>
+            <p className="text-xs font-medium text-[#05C46B]/80 mt-0.5">Semua perubahan profil dan foto telah diperbarui.</p>
+          </div>
         </div>
       )}
 

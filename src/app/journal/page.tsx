@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { TradeLog } from '@/types';
+import { TradeLog, formatCurrencyAmount } from '@/types';
 import { useLanguage } from '@/context/LanguageContext';
 import { useAuth } from '@/context/AuthContext';
 import { getStoredTrades, setStoredTrades } from '@/lib/storage';
@@ -23,6 +23,7 @@ export default function JournalPage() {
   const { t } = useLanguage();
   const { user } = useAuth();
   const [trades, setTrades] = useState<TradeLog[]>([]);
+  const currency = user?.accountCurrency || 'USD';
 
   // Filters & Search State
   const [searchQuery, setSearchQuery] = useState('');
@@ -267,7 +268,7 @@ export default function JournalPage() {
       <div className="tradewire-card overflow-hidden">
         <div className="p-4 border-b border-[#E4E9E6] flex items-center justify-between text-xs text-[#6B7C72] font-semibold">
           <span>Menampilkan <strong>{filteredTrades.length}</strong> transaksi</span>
-          <span>Total PnL Terfilter: <strong className={filteredTrades.reduce((s, t) => s + t.pnl, 0) >= 0 ? 'text-[#05C46B]' : 'text-[#FF4D4D]'}>${filteredTrades.reduce((s, t) => s + t.pnl, 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</strong></span>
+          <span>Total PnL Terfilter: <strong className={filteredTrades.reduce((s, t) => s + t.pnl, 0) >= 0 ? 'text-[#05C46B]' : 'text-[#FF4D4D]'}>{formatCurrencyAmount(filteredTrades.reduce((s, t) => s + t.pnl, 0), currency)}</strong></span>
         </div>
 
         <div className="overflow-x-auto">
@@ -280,7 +281,7 @@ export default function JournalPage() {
                 <th className="py-3 px-4">RRR</th>
                 <th className="py-3 px-4">Strategy & Notes</th>
                 <th className="py-3 px-4">Chart Proof</th>
-                <th className="py-3 px-4">PnL ($)</th>
+                <th className="py-3 px-4">PnL ({currency === 'CENT' ? 'USc' : currency === 'IDR' ? 'Rp' : '$'})</th>
                 <th className="py-3 px-4 text-right">{t('actions')}</th>
               </tr>
             </thead>
@@ -367,7 +368,7 @@ export default function JournalPage() {
                         ) : (
                           <ArrowDownRight className="w-4 h-4 mr-0.5" />
                         )}
-                        {trd.pnl >= 0 ? '+' : ''}${trd.pnl.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                        {trd.pnl >= 0 ? '+' : ''}{formatCurrencyAmount(Math.abs(trd.pnl), currency)}
                       </span>
                     </td>
 
