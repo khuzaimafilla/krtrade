@@ -30,9 +30,21 @@ export const metadata: Metadata = {
     title: "KRtrade",
   },
   icons: {
-    icon: "/logo.png",
-    shortcut: "/logo.png",
-    apple: "/logo.png",
+    icon: [
+      { url: "/logo.png", type: "image/png" },
+    ],
+    shortcut: [
+      { url: "/logo.png", type: "image/png" },
+    ],
+    apple: [
+      { url: "/logo.png", type: "image/png" },
+    ],
+    other: [
+      {
+        rel: "msapplication-TileImage",
+        url: "/logo.png",
+      },
+    ],
   },
   formatDetection: {
     telephone: false,
