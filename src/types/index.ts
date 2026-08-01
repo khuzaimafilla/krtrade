@@ -68,18 +68,17 @@ export interface LeaderboardEntry {
   rank: number;
   username: string;
   fullName?: string;
-  avatar?: string;
   avatarUrl?: string;
   tradingStyle: TradingStyle;
   bio?: string;
-  monthlyReturn?: number;
   returnPercentage?: number;
   winRate: number;
   totalTrades: number;
   totalPnl: number;
   accountCurrency?: AccountCurrency;
   isFriend?: boolean;
-  communityId?: string;
+  isMe?: boolean;
+  groupIds?: string[]; // groups this user belongs to
 }
 
 export interface Friendship {
