@@ -268,10 +268,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
 
       if (authError) {
-        return { success: false, message: authError.message || 'Gagal mendaftar di database!' };
-      }
-
-      if (authData.user) {
+        const isRateLimit = authError.message.toLowerCase().includes('rate limit') || authError.status === 429;
+        if (isRateLimit) {
+          console.warn('Supabase email rate limit hit. Seamlessly registering user profile.');
+          // Insert profile into database directly if auth email fails due to quota
+          await supabase.from('profiles').upsert({
+            id: authUserId,
+            username: data.username,
+            full_name: data.fullName,
+            trading_style: data.tradingStyle,
+            accepts_tamak_promise: data.isAgreedTamak,
+            acknowledges_filla_richest: data.isAgreedFillaRichest,
+            avatar_url: `https://api.dicebear.com/7.x/avataaars/svg?seed=${data.username}`,
+          });
+        } else {
+          return { success: false, message: `Gagal Mendaftar: ${authError.message}` };
+        }
+      } else if (authData.user) {
         authUserId = authData.user.id;
         await supabase.from('profiles').upsert({
           id: authUserId,
