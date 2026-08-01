@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { TradingGroup, GroupMemberDetail } from '@/types';
 import { useLanguage } from '@/context/LanguageContext';
 import { useAuth } from '@/context/AuthContext';
@@ -75,141 +75,159 @@ export default function CommunityPage() {
     setTimeout(() => setToast(null), 3500);
   }
 
-  useEffect(() => {
-    async function loadGroups() {
-      const storedLocal = getStoredGroups();
-      const requests = getStoredRequests();
-      setJoinRequests(requests);
+  // ── Core data loader (extracted so Realtime can re-call it) ──────────────
+  const loadGroups = useCallback(async () => {
+    const storedLocal = getStoredGroups();
+    const requests = getStoredRequests();
 
-      const userJoinedKey = user ? `krtrade_joined_${user.id}` : 'krtrade_joined_guest';
-      const userJoinedSet = new Set<string>();
-      if (typeof window !== 'undefined') {
-        const storedJoined = localStorage.getItem(userJoinedKey);
-        if (storedJoined) {
-          try {
-            JSON.parse(storedJoined).forEach((id: string) => userJoinedSet.add(id));
-          } catch {}
-        }
-      }
-
-      let finalGroups: TradingGroup[] = storedLocal.map((g) => {
-        const isCreatedByMe = user && g.createdBy === user.id;
-        const isUserJoined = isCreatedByMe || userJoinedSet.has(g.id);
-        const realMembersCount = g.members?.length || (isUserJoined ? 1 : 0);
-
-        return {
-          ...g,
-          isJoined: isUserJoined,
-          membersCount: realMembersCount,
-        };
-      });
-
-      if (isSupabaseConfigured && user) {
+    const userJoinedKey = user ? `krtrade_joined_${user.id}` : 'krtrade_joined_guest';
+    const userJoinedSet = new Set<string>();
+    if (typeof window !== 'undefined') {
+      const storedJoined = localStorage.getItem(userJoinedKey);
+      if (storedJoined) {
         try {
-          const { data: dbGroups, error } = await supabase.from('groups').select('*');
-          if (!error && dbGroups && dbGroups.length > 0) {
-            const { data: myMemberships } = await supabase
-              .from('group_members')
-              .select('group_id')
-              .eq('user_id', user.id);
-
-            const joinedGroupIds = new Set(myMemberships?.map((m: any) => m.group_id));
-
-            const mappedDb: TradingGroup[] = await Promise.all(
-              dbGroups.map(async (g: any) => {
-                const isMine = g.created_by === user.id;
-                const isJoined = isMine || joinedGroupIds.has(g.id) || userJoinedSet.has(g.id);
-
-                // Get actual member count from group_members table
-                const { count } = await supabase
-                  .from('group_members')
-                  .select('*', { count: 'exact', head: true })
-                  .eq('group_id', g.id);
-
-                // Get member profiles
-                const { data: memberRows } = await supabase
-                  .from('group_members')
-                  .select('user_id')
-                  .eq('group_id', g.id);
-
-                const memberDetails: GroupMemberDetail[] = [];
-                if (memberRows) {
-                  for (const row of memberRows) {
-                    const { data: prof } = await supabase
-                      .from('profiles')
-                      .select('id, username, full_name, avatar_url')
-                      .eq('id', row.user_id)
-                      .single();
-                    if (prof) {
-                      memberDetails.push({
-                        id: prof.id,
-                        username: prof.username,
-                        fullName: prof.full_name || prof.username,
-                        avatarUrl: prof.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${prof.username}`,
-                        role: g.created_by === prof.id ? 'admin' : 'member',
-                      });
-                    }
-                  }
-                }
-
-                return {
-                  id: g.id,
-                  name: g.name,
-                  code: g.code,
-                  description: g.description || 'Komunitas Trading Kolaboratif KRtrade Platform.',
-                  membersCount: count || memberDetails.length || 1,
-                  totalPnl: 0,
-                  winRate: 0,
-                  isJoined,
-                  createdBy: g.created_by,
-                  members: memberDetails,
-                };
-              })
-            );
-
-            const dbCodes = new Set(mappedDb.map((g) => g.code));
-            const extraLocal = finalGroups.filter((g) => !dbCodes.has(g.code));
-            finalGroups = [...mappedDb, ...extraLocal];
-          }
-
-          // Fetch real pending join requests for groups I'm admin of
-          const myAdminGroups = dbGroups?.filter((g: any) => g.created_by === user.id).map((g: any) => g.id) || [];
-          if (myAdminGroups.length > 0) {
-            const { data: dbRequests } = await supabase
-              .from('group_join_requests')
-              .select('id, group_id, user_id, status, created_at, profiles(username, full_name, avatar_url)')
-              .in('group_id', myAdminGroups)
-              .eq('status', 'pending');
-
-            // Always use DB as source of truth — even if empty (meaning all were accepted/rejected)
-            const mappedRequests: JoinRequest[] = (dbRequests || []).map((r: any) => ({
-              id: r.id,
-              groupId: r.group_id,
-              userId: r.user_id,
-              username: r.profiles?.username || 'user',
-              fullName: r.profiles?.full_name || 'User',
-              avatarUrl: r.profiles?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${r.profiles?.username}`,
-              requestedAt: r.created_at,
-            }));
-
-            // Merge: take DB list + local requests NOT for admin groups (i.e., own outgoing requests)
-            const dbGroupIdSet = new Set(myAdminGroups);
-            const nonAdminLocalRequests = requests.filter(r => !dbGroupIdSet.has(r.groupId));
-            setJoinRequests([...mappedRequests, ...nonAdminLocalRequests]);
-            // Sync localStorage to match DB
-            saveStoredRequests([...mappedRequests, ...nonAdminLocalRequests]);
-          }
-
-        } catch (err) {
-          console.error('Error loading DB groups or requests:', err);
-        }
+          JSON.parse(storedJoined).forEach((id: string) => userJoinedSet.add(id));
+        } catch {}
       }
-
-      setGroups(finalGroups);
     }
 
-    loadGroups();
+    let finalGroups: TradingGroup[] = storedLocal.map((g) => {
+      const isCreatedByMe = user && g.createdBy === user.id;
+      const isUserJoined = isCreatedByMe || userJoinedSet.has(g.id);
+      const realMembersCount = g.members?.length || (isUserJoined ? 1 : 0);
+      return {
+        ...g,
+        isJoined: isUserJoined,
+        membersCount: realMembersCount,
+      };
+    });
+
+    if (isSupabaseConfigured && user) {
+      try {
+        const { data: dbGroups, error } = await supabase.from('groups').select('*');
+        if (!error && dbGroups && dbGroups.length > 0) {
+          const { data: myMemberships } = await supabase
+            .from('group_members')
+            .select('group_id')
+            .eq('user_id', user.id);
+
+          const joinedGroupIds = new Set(myMemberships?.map((m: any) => m.group_id));
+
+          const mappedDb: TradingGroup[] = await Promise.all(
+            dbGroups.map(async (g: any) => {
+              const isMine = g.created_by === user.id;
+              const isJoined = isMine || joinedGroupIds.has(g.id) || userJoinedSet.has(g.id);
+
+              const { count } = await supabase
+                .from('group_members')
+                .select('*', { count: 'exact', head: true })
+                .eq('group_id', g.id);
+
+              const { data: memberRows } = await supabase
+                .from('group_members')
+                .select('user_id')
+                .eq('group_id', g.id);
+
+              const memberDetails: GroupMemberDetail[] = [];
+              if (memberRows) {
+                for (const row of memberRows) {
+                  const { data: prof } = await supabase
+                    .from('profiles')
+                    .select('id, username, full_name, avatar_url')
+                    .eq('id', row.user_id)
+                    .single();
+                  if (prof) {
+                    memberDetails.push({
+                      id: prof.id,
+                      username: prof.username,
+                      fullName: prof.full_name || prof.username,
+                      avatarUrl: prof.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${prof.username}`,
+                      role: g.created_by === prof.id ? 'admin' : 'member',
+                    });
+                  }
+                }
+              }
+
+              return {
+                id: g.id,
+                name: g.name,
+                code: g.code,
+                description: g.description || 'Komunitas Trading Kolaboratif KRtrade Platform.',
+                membersCount: count || memberDetails.length || 1,
+                totalPnl: 0,
+                winRate: 0,
+                isJoined,
+                createdBy: g.created_by,
+                members: memberDetails,
+              };
+            })
+          );
+
+          const dbCodes = new Set(mappedDb.map((g) => g.code));
+          const extraLocal = finalGroups.filter((g) => !dbCodes.has(g.code));
+          finalGroups = [...mappedDb, ...extraLocal];
+        }
+
+        // Fetch real pending join requests for groups I'm admin of
+        const myAdminGroups = dbGroups?.filter((g: any) => g.created_by === user.id).map((g: any) => g.id) || [];
+        if (myAdminGroups.length > 0) {
+          const { data: dbRequests } = await supabase
+            .from('group_join_requests')
+            .select('id, group_id, user_id, status, created_at, profiles(username, full_name, avatar_url)')
+            .in('group_id', myAdminGroups)
+            .eq('status', 'pending');
+
+          const mappedRequests: JoinRequest[] = (dbRequests || []).map((r: any) => ({
+            id: r.id,
+            groupId: r.group_id,
+            userId: r.user_id,
+            username: r.profiles?.username || 'user',
+            fullName: r.profiles?.full_name || 'User',
+            avatarUrl: r.profiles?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${r.profiles?.username}`,
+            requestedAt: r.created_at,
+          }));
+
+          const dbGroupIdSet = new Set(myAdminGroups);
+          const nonAdminLocalRequests = requests.filter(r => !dbGroupIdSet.has(r.groupId));
+          setJoinRequests([...mappedRequests, ...nonAdminLocalRequests]);
+          saveStoredRequests([...mappedRequests, ...nonAdminLocalRequests]);
+        } else {
+          setJoinRequests(requests);
+        }
+
+      } catch (err) {
+        console.error('Error loading DB groups or requests:', err);
+      }
+    } else {
+      setJoinRequests(requests);
+    }
+
+    setGroups(finalGroups);
   }, [user]);
+
+  // ── Initial load + Supabase Realtime subscriptions ───────────────────────
+  useEffect(() => {
+    loadGroups();
+
+    if (!isSupabaseConfigured || !user) return;
+
+    const channel = supabase
+      .channel(`community-rt-${user.id}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'groups' }, () => {
+        loadGroups();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'group_members' }, () => {
+        loadGroups();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'group_join_requests' }, () => {
+        loadGroups();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, loadGroups]);
 
   const saveGroups = (updated: TradingGroup[]) => {
     setStoredGroups(updated);

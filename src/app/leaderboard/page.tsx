@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useLanguage } from '@/context/LanguageContext';
 import { useAuth } from '@/context/AuthContext';
 import { TradingStyle, LeaderboardEntry } from '@/types';
@@ -79,151 +79,171 @@ export default function LeaderboardPage() {
     loadUserGroups();
   }, [currentUser]);
 
-  useEffect(() => {
-    async function fetchLeaderboard() {
-      setLoading(true);
+  const fetchLeaderboard = useCallback(async () => {
+    setLoading(true);
 
-      if (isSupabaseConfigured) {
-        try {
-          const { data: profilesData } = await supabase.from('profiles').select('*');
-          const { data: tradesData } = await supabase.from('trades').select('*');
-          const { data: friendshipsData } = await supabase
-            .from('friendships')
-            .select('*')
-            .eq('status', 'accepted'); // Only accepted friendships
+    if (isSupabaseConfigured) {
+      try {
+        const { data: profilesData } = await supabase.from('profiles').select('*');
+        const { data: tradesData } = await supabase.from('trades').select('*');
+        const { data: friendshipsData } = await supabase
+          .from('friendships')
+          .select('*')
+          .eq('status', 'accepted');
 
-          const friendUserIds = new Set<string>();
-          if (currentUser && friendshipsData) {
-            friendshipsData.forEach((f) => {
-              if (f.requester_id === currentUser.id) friendUserIds.add(f.addressee_id);
-              if (f.addressee_id === currentUser.id) friendUserIds.add(f.requester_id);
-            });
-          }
-          setFriendIds(friendUserIds);
-
-          if (profilesData && profilesData.length > 0) {
-            const dbEntries: LeaderboardEntry[] = profilesData.map((p) => {
-              const userTrades = tradesData ? tradesData.filter((t) => t.user_id === p.id) : [];
-              const totalTrades = userTrades.length;
-              const winningTrades = userTrades.filter((t) => Number(t.pnl) > 0).length;
-              const winRate = totalTrades > 0 ? Math.round((winningTrades / totalTrades) * 100) : 0;
-              const totalPnl = userTrades.reduce((acc, t) => acc + Number(t.pnl || 0), 0);
-              const returnPercentage = totalTrades > 0 ? Math.round((totalPnl / 10000) * 100) : 0;
-
-              const isMe = currentUser && (p.id === currentUser.id || p.username.toLowerCase() === currentUser.username.toLowerCase());
-              const finalAvatar = isMe && currentUser?.avatarUrl ? currentUser.avatarUrl : (p.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${p.username}`);
-              const finalFullName = isMe && currentUser?.fullName ? currentUser.fullName : (p.full_name || p.username);
-
-              return {
-                id: p.id,
-                rank: 0,
-                username: p.username,
-                fullName: finalFullName,
-                avatarUrl: finalAvatar,
-                bio: isMe ? currentUser?.bio : (p.bio || ''),
-                tradingStyle: p.trading_style as TradingStyle,
-                totalTrades,
-                winRate,
-                returnPercentage,
-                totalPnl,
-                isFriend: Boolean(friendUserIds.has(p.id) || isMe),
-              };
-            });
-
-            // Include Creator khuzaimafilla if not present in DB
-            const existingUsernames = new Set(dbEntries.map((e) => e.username.toLowerCase()));
-            if (!existingUsernames.has('khuzaimafilla')) {
-              const isMe = currentUser?.username.toLowerCase() === 'khuzaimafilla';
-              dbEntries.push({
-                id: 'usr_khuzaima',
-                rank: 0,
-                username: 'khuzaimafilla',
-                fullName: isMe && currentUser?.fullName ? currentUser.fullName : 'Khuzaima Filla',
-                avatarUrl: (isMe && currentUser?.avatarUrl) ? currentUser.avatarUrl : 'https://api.dicebear.com/7.x/avataaars/svg?seed=khuzaimafilla',
-                bio: isMe ? currentUser?.bio : 'Developer & Creator KRtrade Platform.',
-                tradingStyle: 'Scalping',
-                totalTrades: 0,
-                winRate: 0,
-                returnPercentage: 0,
-                totalPnl: 0,
-                isFriend: Boolean(isMe || friendUserIds.has('usr_khuzaima')),
-              });
-            }
-
-            // Add current logged in user if not in DB
-            if (currentUser && !existingUsernames.has(currentUser.username.toLowerCase())) {
-              dbEntries.push({
-                id: currentUser.id,
-                rank: 0,
-                username: currentUser.username,
-                fullName: currentUser.fullName,
-                avatarUrl: currentUser.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${currentUser.username}`,
-                bio: currentUser.bio,
-                tradingStyle: currentUser.tradingStyle,
-                totalTrades: 0,
-                winRate: 0,
-                returnPercentage: 0,
-                totalPnl: 0,
-                isFriend: true,
-              });
-            }
-
-            // Sort by Win Rate descending
-            dbEntries.sort((a, b) => b.winRate - a.winRate);
-            dbEntries.forEach((e, idx) => { e.rank = idx + 1; });
-
-            setLeaderboardEntries(dbEntries);
-            setLoading(false);
-            return;
-          }
-        } catch (err) {
-          console.error('Error fetching real leaderboard:', err);
+        const friendUserIds = new Set<string>();
+        if (currentUser && friendshipsData) {
+          friendshipsData.forEach((f) => {
+            if (f.requester_id === currentUser.id) friendUserIds.add(f.addressee_id);
+            if (f.addressee_id === currentUser.id) friendUserIds.add(f.requester_id);
+          });
         }
+        setFriendIds(friendUserIds);
+
+        if (profilesData && profilesData.length > 0) {
+          const dbEntries: LeaderboardEntry[] = profilesData.map((p) => {
+            const userTrades = tradesData ? tradesData.filter((t) => t.user_id === p.id) : [];
+            const totalTrades = userTrades.length;
+            const winningTrades = userTrades.filter((t) => Number(t.pnl) > 0).length;
+            const winRate = totalTrades > 0 ? Math.round((winningTrades / totalTrades) * 100) : 0;
+            const totalPnl = userTrades.reduce((acc, t) => acc + Number(t.pnl || 0), 0);
+            const returnPercentage = totalTrades > 0 ? Math.round((totalPnl / 10000) * 100) : 0;
+
+            const isMe = currentUser && (p.id === currentUser.id || p.username.toLowerCase() === currentUser.username.toLowerCase());
+            const finalAvatar = isMe && currentUser?.avatarUrl ? currentUser.avatarUrl : (p.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${p.username}`);
+            const finalFullName = isMe && currentUser?.fullName ? currentUser.fullName : (p.full_name || p.username);
+
+            return {
+              id: p.id,
+              rank: 0,
+              username: p.username,
+              fullName: finalFullName,
+              avatarUrl: finalAvatar,
+              bio: isMe ? currentUser?.bio : (p.bio || ''),
+              tradingStyle: p.trading_style as TradingStyle,
+              totalTrades,
+              winRate,
+              returnPercentage,
+              totalPnl,
+              isFriend: Boolean(friendUserIds.has(p.id) || isMe),
+            };
+          });
+
+          // Include Creator khuzaimafilla if not present in DB
+          const existingUsernames = new Set(dbEntries.map((e) => e.username.toLowerCase()));
+          if (!existingUsernames.has('khuzaimafilla')) {
+            const isMe = currentUser?.username.toLowerCase() === 'khuzaimafilla';
+            dbEntries.push({
+              id: 'usr_khuzaima',
+              rank: 0,
+              username: 'khuzaimafilla',
+              fullName: isMe && currentUser?.fullName ? currentUser.fullName : 'Khuzaima Filla',
+              avatarUrl: (isMe && currentUser?.avatarUrl) ? currentUser.avatarUrl : 'https://api.dicebear.com/7.x/avataaars/svg?seed=khuzaimafilla',
+              bio: isMe ? currentUser?.bio : 'Developer & Creator KRtrade Platform.',
+              tradingStyle: 'Scalping',
+              totalTrades: 0,
+              winRate: 0,
+              returnPercentage: 0,
+              totalPnl: 0,
+              isFriend: Boolean(isMe || friendUserIds.has('usr_khuzaima')),
+            });
+          }
+
+          // Add current logged in user if not in DB
+          if (currentUser && !existingUsernames.has(currentUser.username.toLowerCase())) {
+            dbEntries.push({
+              id: currentUser.id,
+              rank: 0,
+              username: currentUser.username,
+              fullName: currentUser.fullName,
+              avatarUrl: currentUser.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${currentUser.username}`,
+              bio: currentUser.bio,
+              tradingStyle: currentUser.tradingStyle,
+              totalTrades: 0,
+              winRate: 0,
+              returnPercentage: 0,
+              totalPnl: 0,
+              isFriend: true,
+            });
+          }
+
+          // Sort by Win Rate descending
+          dbEntries.sort((a, b) => b.winRate - a.winRate);
+          dbEntries.forEach((e, idx) => { e.rank = idx + 1; });
+
+          setLeaderboardEntries(dbEntries);
+          setLoading(false);
+          return;
+        }
+      } catch (err) {
+        console.error('Error fetching real leaderboard:', err);
       }
-
-      // Fallback - show current user only
-      const baseEntries: LeaderboardEntry[] = [];
-
-      if (currentUser?.username.toLowerCase() !== 'khuzaimafilla') {
-        baseEntries.push({
-          id: 'usr_khuzaima',
-          rank: 1,
-          username: 'khuzaimafilla',
-          fullName: 'Khuzaima Filla',
-          avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=khuzaimafilla',
-          bio: 'Developer & Creator KRtrade Platform.',
-          tradingStyle: 'Scalping',
-          totalTrades: 0,
-          winRate: 0,
-          returnPercentage: 0,
-          totalPnl: 0,
-          isFriend: true,
-        });
-      }
-
-      if (currentUser) {
-        baseEntries.push({
-          id: currentUser.id,
-          rank: baseEntries.length + 1,
-          username: currentUser.username,
-          fullName: currentUser.fullName,
-          avatarUrl: currentUser.avatarUrl,
-          bio: currentUser.bio,
-          tradingStyle: currentUser.tradingStyle,
-          totalTrades: 0,
-          winRate: 0,
-          returnPercentage: 0,
-          totalPnl: 0,
-          isFriend: true,
-        });
-      }
-
-      setLeaderboardEntries(baseEntries);
-      setLoading(false);
     }
 
-    fetchLeaderboard();
+    // Fallback - show current user only
+    const baseEntries: LeaderboardEntry[] = [];
+
+    if (currentUser?.username.toLowerCase() !== 'khuzaimafilla') {
+      baseEntries.push({
+        id: 'usr_khuzaima',
+        rank: 1,
+        username: 'khuzaimafilla',
+        fullName: 'Khuzaima Filla',
+        avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=khuzaimafilla',
+        bio: 'Developer & Creator KRtrade Platform.',
+        tradingStyle: 'Scalping',
+        totalTrades: 0,
+        winRate: 0,
+        returnPercentage: 0,
+        totalPnl: 0,
+        isFriend: true,
+      });
+    }
+
+    if (currentUser) {
+      baseEntries.push({
+        id: currentUser.id,
+        rank: baseEntries.length + 1,
+        username: currentUser.username,
+        fullName: currentUser.fullName,
+        avatarUrl: currentUser.avatarUrl,
+        bio: currentUser.bio,
+        tradingStyle: currentUser.tradingStyle,
+        totalTrades: 0,
+        winRate: 0,
+        returnPercentage: 0,
+        totalPnl: 0,
+        isFriend: true,
+      });
+    }
+
+    setLeaderboardEntries(baseEntries);
+    setLoading(false);
   }, [currentUser]);
+
+  // ── Initial load + Supabase Realtime subscriptions ───────────────────────
+  useEffect(() => {
+    fetchLeaderboard();
+
+    if (!isSupabaseConfigured || !currentUser) return;
+
+    const channel = supabase
+      .channel(`leaderboard-rt-${currentUser.id}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, () => {
+        fetchLeaderboard();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'trades' }, () => {
+        fetchLeaderboard();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'friendships' }, () => {
+        fetchLeaderboard();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [currentUser, fetchLeaderboard]);
 
   // Filtered Entries based on Scope & Style
   const filteredEntries = useMemo(() => {
