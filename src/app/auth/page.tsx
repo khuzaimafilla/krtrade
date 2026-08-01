@@ -14,6 +14,8 @@ import {
   ShieldAlert,
   Eye,
   EyeOff,
+  CheckCircle2,
+  Loader2,
 } from 'lucide-react';
 
 export default function AuthPage() {
@@ -45,27 +47,39 @@ export default function AuthPage() {
   const [isAgreedFillaRichest, setIsAgreedFillaRichest] = useState(false);
 
   const [errorMessage, setErrorMessage] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Handle Login Submit
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMessage('');
+    setSuccessMessage('');
+
     if (!loginEmailUser || !loginPassword) {
       setErrorMessage('Harap isi Username/Email dan Password!');
       return;
     }
-    setErrorMessage('');
-    const success = await login(loginEmailUser, loginPassword);
-    if (success) {
-      router.push('/dashboard');
+
+    setIsSubmitting(true);
+    const result = await login(loginEmailUser, loginPassword);
+    setIsSubmitting(false);
+
+    if (result.success) {
+      setSuccessMessage(result.message);
+      setTimeout(() => {
+        router.push('/dashboard');
+      }, 1000);
     } else {
-      setErrorMessage('Gagal masuk. Periksa kembali Username/Email & Password!');
+      setErrorMessage(result.message);
     }
   };
 
   // Handle Register Submit
-  const handleRegisterSubmit = (e: React.FormEvent) => {
+  const handleRegisterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage('');
+    setSuccessMessage('');
 
     if (!regFullName || !regEmail || !regUsername || !regPassword) {
       setErrorMessage('Semua field wajib diisi!');
@@ -82,7 +96,8 @@ export default function AuthPage() {
       return;
     }
 
-    register({
+    setIsSubmitting(true);
+    const result = await register({
       fullName: regFullName,
       email: regEmail,
       username: regUsername,
@@ -91,8 +106,16 @@ export default function AuthPage() {
       isAgreedTamak,
       isAgreedFillaRichest,
     });
+    setIsSubmitting(false);
 
-    router.push('/dashboard');
+    if (result.success) {
+      setSuccessMessage(result.message);
+      setTimeout(() => {
+        router.push('/dashboard');
+      }, 1000);
+    } else {
+      setErrorMessage(result.message);
+    }
   };
 
   return (
@@ -141,6 +164,14 @@ export default function AuthPage() {
             {t('registerNow')}
           </button>
         </div>
+
+        {/* Success Alert Banner */}
+        {successMessage && (
+          <div className="p-3 mb-4 rounded-2xl bg-[#E6F7F0] border border-[#05C46B]/40 text-[#05C46B] text-xs font-bold flex items-center space-x-2 animate-fade-in shadow-sm">
+            <CheckCircle2 className="w-4 h-4 shrink-0" />
+            <span>{successMessage}</span>
+          </div>
+        )}
 
         {/* Error Alert Banner */}
         {errorMessage && (
@@ -201,10 +232,20 @@ export default function AuthPage() {
 
             <button
               type="submit"
-              className="w-full py-3.5 bg-[#05C46B] hover:bg-[#04A75B] text-white font-black text-sm rounded-2xl shadow-md shadow-[#05C46B]/20 flex items-center justify-center space-x-2 transition-all hover:scale-[1.01]"
+              disabled={isSubmitting}
+              className="w-full py-3.5 bg-[#05C46B] hover:bg-[#04A75B] disabled:bg-[#05C46B]/60 text-white font-black text-sm rounded-2xl shadow-md shadow-[#05C46B]/20 flex items-center justify-center space-x-2 transition-all hover:scale-[1.01]"
             >
-              <span>{t('loginNow')}</span>
-              <ArrowRight className="w-4 h-4" />
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Memproses...</span>
+                </>
+              ) : (
+                <>
+                  <span>{t('loginNow')}</span>
+                  <ArrowRight className="w-4 h-4" />
+                </>
+              )}
             </button>
           </form>
         ) : (
@@ -353,14 +394,21 @@ export default function AuthPage() {
 
             <button
               type="submit"
-              disabled={!isAgreedTamak || !isAgreedFillaRichest}
-              className={`w-full py-3 rounded-2xl font-black text-sm transition-all ${
-                isAgreedTamak && isAgreedFillaRichest
+              disabled={!isAgreedTamak || !isAgreedFillaRichest || isSubmitting}
+              className={`w-full py-3 rounded-2xl font-black text-sm transition-all flex items-center justify-center space-x-2 ${
+                isAgreedTamak && isAgreedFillaRichest && !isSubmitting
                   ? 'bg-[#05C46B] hover:bg-[#04A75B] text-white shadow-md shadow-[#05C46B]/20 cursor-pointer'
                   : 'bg-[#E4E9E6] text-[#6B7C72] cursor-not-allowed'
               }`}
             >
-              {t('registerBtn')}
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin text-[#6B7C72]" />
+                  <span>Mendaftarkan Akun...</span>
+                </>
+              ) : (
+                <span>{t('registerBtn')}</span>
+              )}
             </button>
           </form>
         )}
