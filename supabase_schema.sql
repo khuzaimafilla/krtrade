@@ -68,6 +68,15 @@ CREATE TABLE IF NOT EXISTS public.group_members (
   joined_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   CONSTRAINT unique_group_member UNIQUE (group_id, user_id)
 );
+-- 6. GROUP JOIN REQUESTS TABLE
+CREATE TABLE IF NOT EXISTS public.group_join_requests (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  group_id UUID NOT NULL REFERENCES public.groups(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'accepted', 'rejected')),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  CONSTRAINT unique_join_request UNIQUE (group_id, user_id)
+);
 
 -- Enable Row Level Security (RLS)
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
@@ -75,6 +84,7 @@ ALTER TABLE public.trades ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.friendships ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.groups ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.group_members ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.group_join_requests ENABLE ROW LEVEL SECURITY;
 
 -- Safely Drop Existing Policies First (Avoid ERROR: 42710 policy already exists)
 DO $$ 
@@ -105,6 +115,11 @@ BEGIN
   EXECUTE 'DROP POLICY IF EXISTS "Group members viewable by everyone" ON public.group_members';
   EXECUTE 'DROP POLICY IF EXISTS "Auth users join groups" ON public.group_members';
   EXECUTE 'DROP POLICY IF EXISTS "Auth users leave groups" ON public.group_members';
+  -- Group Join Requests
+  EXECUTE 'DROP POLICY IF EXISTS "Group join requests viewable by everyone" ON public.group_join_requests';
+  EXECUTE 'DROP POLICY IF EXISTS "Auth users request to join groups" ON public.group_join_requests';
+  EXECUTE 'DROP POLICY IF EXISTS "Auth users update join requests" ON public.group_join_requests';
+  EXECUTE 'DROP POLICY IF EXISTS "Auth users delete join requests" ON public.group_join_requests';
 END $$;
 
 -- Create Policies
@@ -129,6 +144,11 @@ CREATE POLICY "Auth users delete groups" ON public.groups FOR DELETE USING (true
 CREATE POLICY "Group members viewable by everyone" ON public.group_members FOR SELECT USING (true);
 CREATE POLICY "Auth users join groups" ON public.group_members FOR INSERT WITH CHECK (true);
 CREATE POLICY "Auth users leave groups" ON public.group_members FOR DELETE USING (true);
+
+CREATE POLICY "Group join requests viewable by everyone" ON public.group_join_requests FOR SELECT USING (true);
+CREATE POLICY "Auth users request to join groups" ON public.group_join_requests FOR INSERT WITH CHECK (true);
+CREATE POLICY "Auth users update join requests" ON public.group_join_requests FOR UPDATE USING (true);
+CREATE POLICY "Auth users delete join requests" ON public.group_join_requests FOR DELETE USING (true);
 
 -- Grant All Permissions
 GRANT ALL ON ALL TABLES IN SCHEMA public TO postgres, anon, authenticated, service_role;

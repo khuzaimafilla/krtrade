@@ -171,8 +171,37 @@ export default function CommunityPage() {
             const extraLocal = finalGroups.filter((g) => !dbCodes.has(g.code));
             finalGroups = [...mappedDb, ...extraLocal];
           }
+          }
+
+          // Fetch real pending join requests for groups I'm admin of
+          const myAdminGroups = dbGroups?.filter((g: any) => g.created_by === user.id).map((g: any) => g.id) || [];
+          if (myAdminGroups.length > 0) {
+            const { data: dbRequests } = await supabase
+              .from('group_join_requests')
+              .select('id, group_id, user_id, status, created_at, profiles(username, full_name, avatar_url)')
+              .in('group_id', myAdminGroups)
+              .eq('status', 'pending');
+
+            if (dbRequests && dbRequests.length > 0) {
+              const mappedRequests: JoinRequest[] = dbRequests.map((r: any) => ({
+                id: r.id,
+                groupId: r.group_id,
+                userId: r.user_id,
+                username: r.profiles?.username || 'user',
+                fullName: r.profiles?.full_name || 'User',
+                avatarUrl: r.profiles?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${r.profiles?.username}`,
+                requestedAt: r.created_at,
+              }));
+
+              // Merge with local requests to avoid duplicates
+              const dbRequestIds = new Set(mappedRequests.map(r => `${r.groupId}-${r.userId}`));
+              const filteredLocal = requests.filter(r => !dbRequestIds.has(`${r.groupId}-${r.userId}`));
+              setJoinRequests([...mappedRequests, ...filteredLocal]);
+            }
+          }
+
         } catch (err) {
-          console.error('Error loading DB groups:', err);
+          console.error('Error loading DB groups or requests:', err);
         }
       }
 
@@ -294,7 +323,7 @@ export default function CommunityPage() {
         group_id: targetGroup.id,
         user_id: user.id,
         status: 'pending',
-      }).select();
+      });
     }
 
     setIsJoinOpen(false);
@@ -341,6 +370,16 @@ export default function CommunityPage() {
     setJoinRequests(filteredRequests);
     saveStoredRequests(filteredRequests);
 
+    if (isSupabaseConfigured) {
+      // 1. Update request status to accepted
+      supabase.from('group_join_requests').update({ status: 'accepted' }).eq('id', request.id).then();
+      // 2. Insert into group_members
+      supabase.from('group_members').insert({
+        group_id: request.groupId,
+        user_id: request.userId,
+      }).then();
+    }
+
     // Update admin modal
     if (selectedAdminGroup?.id === request.groupId) {
       const updatedGroup = updated.find((g) => g.id === request.groupId);
@@ -354,6 +393,11 @@ export default function CommunityPage() {
     const filteredRequests = joinRequests.filter((r) => r.id !== request.id);
     setJoinRequests(filteredRequests);
     saveStoredRequests(filteredRequests);
+
+    if (isSupabaseConfigured) {
+      supabase.from('group_join_requests').update({ status: 'rejected' }).eq('id', request.id).then();
+    }
+
     showToast(`Permintaan dari @${request.username} ditolak.`, 'error');
   };
 
