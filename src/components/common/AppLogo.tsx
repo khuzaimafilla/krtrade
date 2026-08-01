@@ -38,9 +38,6 @@ export default function AppLogo({ className = '', size = 40, showText = true }: 
             <span className="font-extrabold text-xl tracking-tight text-[#1E2923] font-montserrat">
               KRtrade
             </span>
-            <span className="px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wider rounded-full bg-[#E6F7F0] text-[#05C46B] border border-[#05C46B]/30 font-poppins">
-              PRO
-            </span>
           </div>
           <p className="text-[10px] font-semibold text-[#6B7C72] font-poppins">
             <span className="text-[#05C46B] font-bold">BETA Version 0.0.0.1</span>

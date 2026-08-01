@@ -34,13 +34,13 @@ export function setStoredUserProfile(profile: UserProfile): void {
 }
 
 export function getStoredTrades(): TradeLog[] {
-  if (typeof window === 'undefined') return initialTrades;
+  if (typeof window === 'undefined') return [];
   const data = localStorage.getItem(TRADES_KEY);
-  if (!data) return initialTrades;
+  if (!data) return [];
   try {
     return JSON.parse(data);
   } catch {
-    return initialTrades;
+    return [];
   }
 }
 
@@ -50,13 +50,13 @@ export function setStoredTrades(trades: TradeLog[]): void {
 }
 
 export function getStoredGroups(): TradingGroup[] {
-  if (typeof window === 'undefined') return initialGroups;
+  if (typeof window === 'undefined') return [];
   const data = localStorage.getItem(GROUPS_KEY);
-  if (!data) return initialGroups;
+  if (!data) return [];
   try {
     return JSON.parse(data);
   } catch {
-    return initialGroups;
+    return [];
   }
 }
 

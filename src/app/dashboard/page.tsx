@@ -77,7 +77,7 @@ export default function DashboardPage() {
           <div className="flex items-center space-x-2 mb-2">
             <span className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-[#E6F7F0] text-[#05C46B] text-xs font-extrabold border border-[#05C46B]/20">
               <ShieldCheck className="w-3.5 h-3.5" />
-              <span>Trader Status: VERIFIED PRO</span>
+              <span>Trader Status: ACTIVE TRADER</span>
             </span>
             {mounted && user?.username && (
               <CreatorBadge username={user.username} size="sm" />
@@ -91,7 +91,7 @@ export default function DashboardPage() {
           <p className="text-xs text-[#6B7C72] mt-1 font-medium">
             Trader Profile:{' '}
             <strong className="text-[#1E2923]">
-              {mounted ? (user?.fullName || 'Filla Calon Wong Sugih') : 'Filla Calon Wong Sugih'}
+              {mounted ? (user?.fullName || 'Trader Pro') : 'Trader Pro'}
             </strong>{' '}
             | Style:{' '}
             <span className="text-[#05C46B] font-extrabold">
@@ -223,17 +223,15 @@ export default function DashboardPage() {
         {recentTrades.length === 0 ? (
           <div className="text-center py-10 text-[#6B7C72]">
             <p className="text-sm font-bold">Belum ada transaksi trading dicatat.</p>
-            <Link
-              href="/journal"
-              className="inline-block mt-3 px-4 py-2 bg-[#05C46B] text-white text-xs font-bold rounded-xl"
-            >
-              + Catat Transaksi Perdana
-            </Link>
+            <p className="text-sm font-bold">Belum ada transaksi jurnal teratas.</p>
+            <p className="text-xs mt-1">
+              Klik tombol <strong className="text-[#05C46B] font-extrabold">"+ Catat Transaksi Baru"</strong> di atas untuk mulai mencatat transaksi pertama Anda!
+            </p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-[#F8FAF9] text-[#6B7C72] uppercase font-bold border-b border-[#E4E9E6]">
+              <thead className="bg-[#F8FAF9] text-[#6B7C72] font-extrabold uppercase border-b border-[#E4E9E6]">
                 <tr>
                   <th className="p-3">Tanggal</th>
                   <th className="p-3">Pair</th>
