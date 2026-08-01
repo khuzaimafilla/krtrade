@@ -195,7 +195,7 @@ export default function LeaderboardPage() {
 
   // Filtered Entries based on Scope & Style
   const filteredEntries = useMemo(() => {
-    return leaderboardEntries.filter((entry) => {
+    const filtered = leaderboardEntries.filter((entry) => {
       // Scope Filter
       if (scopeTab === 'friends' && !entry.isFriend) return false;
       if (scopeTab === 'community') {
@@ -207,6 +207,12 @@ export default function LeaderboardPage() {
       if (styleFilter !== 'ALL' && entry.tradingStyle !== styleFilter) return false;
       return true;
     });
+
+    // Re-assign rank based on the filtered result
+    return filtered.map((entry, index) => ({
+      ...entry,
+      rank: index + 1,
+    }));
   }, [leaderboardEntries, scopeTab, styleFilter, userGroupIds]);
 
   const handleOpenUserPreview = async (entry: LeaderboardEntry) => {
