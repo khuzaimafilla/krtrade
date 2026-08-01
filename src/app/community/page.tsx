@@ -171,7 +171,6 @@ export default function CommunityPage() {
             const extraLocal = finalGroups.filter((g) => !dbCodes.has(g.code));
             finalGroups = [...mappedDb, ...extraLocal];
           }
-          }
 
           // Fetch real pending join requests for groups I'm admin of
           const myAdminGroups = dbGroups?.filter((g: any) => g.created_by === user.id).map((g: any) => g.id) || [];
