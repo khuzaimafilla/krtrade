@@ -664,7 +664,7 @@ export default function CommunityPage() {
 
               {/* Action Buttons */}
               <div className="space-y-2">
-                {isAdmin && (
+                {group.isJoined && (
                   <button
                     type="button"
                     onClick={() => {
@@ -673,8 +673,8 @@ export default function CommunityPage() {
                     }}
                     className="w-full py-2 bg-[#E6F7F0] hover:bg-[#05C46B]/20 text-[#05C46B] font-extrabold text-xs rounded-xl border border-[#05C46B]/40 flex items-center justify-center space-x-1.5 transition-all"
                   >
-                    <Crown className="w-3.5 h-3.5 text-[#D4AF37]" />
-                    <span>Kelola Anggota (Admin)</span>
+                    <Users className="w-3.5 h-3.5 text-[#05C46B]" />
+                    <span>{isAdmin ? 'Kelola Anggota (Admin)' : 'Lihat Anggota Grup'}</span>
                   </button>
                 )}
 
@@ -724,10 +724,10 @@ export default function CommunityPage() {
               </div>
               <div>
                 <h3 className="text-xl font-extrabold text-[#1E2923] font-montserrat">
-                  Admin: {selectedAdminGroup.name}
+                  Anggota Grup: {selectedAdminGroup.name}
                 </h3>
                 <p className="text-xs text-[#6B7C72] font-medium">
-                  Kelola anggota dan permintaan bergabung
+                  Daftar anggota komunitas trading
                 </p>
               </div>
             </div>
@@ -737,12 +737,12 @@ export default function CommunityPage() {
                 Total Anggota: <strong className="text-[#1E2923]">{selectedAdminGroup.members?.length || selectedAdminGroup.membersCount}</strong>
               </span>
               <span className="px-2.5 py-0.5 rounded-full bg-[#E6F7F0] text-[#05C46B] text-[10px] font-extrabold border border-[#05C46B]/30">
-                ADMIN CONTROL
+                {selectedAdminGroup.createdBy === user?.id ? 'ADMIN CONTROL' : 'ANGGOTA VIEW'}
               </span>
             </div>
 
-            {/* Pending Requests in Admin Modal */}
-            {joinRequests.filter((r) => r.groupId === selectedAdminGroup.id).length > 0 && (
+            {/* Pending Requests in Modal (admin only) */}
+            {selectedAdminGroup.createdBy === user?.id && joinRequests.filter((r) => r.groupId === selectedAdminGroup.id).length > 0 && (
               <div className="mb-4">
                 <p className="text-xs font-extrabold text-amber-600 mb-2 flex items-center space-x-1">
                   <Clock className="w-3.5 h-3.5" />
@@ -795,7 +795,9 @@ export default function CommunityPage() {
                 <p className="text-xs text-[#6B7C72] text-center py-4">Belum ada anggota.</p>
               ) : (
                 (selectedAdminGroup.members || []).map((mbr) => {
-                  const isAdminMember = mbr.role === 'admin';
+                  const isAdminMember = mbr.role === 'admin' || mbr.id === selectedAdminGroup.createdBy;
+                  const isCurrentAdmin = selectedAdminGroup.createdBy === user?.id;
+
                   return (
                     <div
                       key={mbr.id}
@@ -819,26 +821,33 @@ export default function CommunityPage() {
                               @{mbr.username}
                             </span>
                             <CreatorBadge username={mbr.username} size="sm" />
-                            {isAdminMember && (
-                              <span className="px-2 py-0.5 rounded-full bg-[#D4AF37]/20 text-[#D4AF37] font-black text-[9px] border border-[#D4AF37]/40">
-                                ADMIN
-                              </span>
-                            )}
                           </div>
                           <p className="text-[10px] text-[#6B7C72]">{mbr.fullName}</p>
                         </div>
                       </div>
 
-                      {!isAdminMember && (
-                        <button
-                          type="button"
-                          onClick={() => handleKickMember(selectedAdminGroup.id, mbr.id)}
-                          className="px-3 py-1.5 rounded-xl bg-[#FF4D4D]/10 hover:bg-[#FF4D4D] text-[#FF4D4D] hover:text-white text-xs font-extrabold border border-[#FF4D4D]/30 flex items-center space-x-1 transition-all"
-                        >
-                          <UserX className="w-3.5 h-3.5" />
-                          <span>Kick</span>
-                        </button>
-                      )}
+                      <div className="flex items-center space-x-2">
+                        {isAdminMember ? (
+                          <span className="px-2.5 py-1 rounded-full bg-[#D4AF37]/20 text-[#D4AF37] font-black text-[10px] border border-[#D4AF37]/40">
+                            ADMIN
+                          </span>
+                        ) : (
+                          <span className="px-2.5 py-1 rounded-full bg-[#E6F7F0] text-[#05C46B] font-extrabold text-[10px] border border-[#05C46B]/30">
+                            ANGGOTA
+                          </span>
+                        )}
+
+                        {isCurrentAdmin && !isAdminMember && (
+                          <button
+                            type="button"
+                            onClick={() => handleKickMember(selectedAdminGroup.id, mbr.id)}
+                            className="px-3 py-1.5 rounded-xl bg-[#FF4D4D]/10 hover:bg-[#FF4D4D] text-[#FF4D4D] hover:text-white text-xs font-extrabold border border-[#FF4D4D]/30 flex items-center space-x-1 transition-all"
+                          >
+                            <UserX className="w-3.5 h-3.5" />
+                            <span>Kick</span>
+                          </button>
+                        )}
+                      </div>
                     </div>
                   );
                 })
