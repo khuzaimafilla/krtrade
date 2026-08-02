@@ -233,7 +233,7 @@ export default function AuthPage() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full py-3.5 bg-[#05C46B] hover:bg-[#04A75B] disabled:bg-[#05C46B]/60 text-white font-black text-sm rounded-2xl shadow-md shadow-[#05C46B]/20 flex items-center justify-center space-x-2 transition-all hover:scale-[1.01]"
+              className="w-full py-3.5 bg-[#05C46B] hover:bg-[#04A75B] disabled:bg-[#05C46B]/60 text-white font-black text-sm rounded-2xl shadow-md shadow-[#05C46B]/20 flex items-center justify-center space-x-2 transition-all btn-touch-target disabled:cursor-not-allowed"
             >
               {isSubmitting ? (
                 <>

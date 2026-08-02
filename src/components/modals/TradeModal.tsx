@@ -3,13 +3,13 @@
 import React, { useState, useEffect } from 'react';
 import { TradeLog } from '@/types';
 import { useLanguage } from '@/context/LanguageContext';
-import { X, Plus, Save, Image as ImageIcon, Upload } from 'lucide-react';
+import { X, Save, Upload, Loader } from 'lucide-react';
 import { convertFileToBase64 } from '@/lib/imageHelper';
 
 interface TradeModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (trade: Omit<TradeLog, 'id'> & { id?: string }) => void;
+  onSave: (trade: Omit<TradeLog, 'id'> & { id?: string }) => Promise<void>;
   initialTrade?: TradeLog | null;
 }
 
@@ -31,6 +31,7 @@ export default function TradeModal({
   const [strategy, setStrategy] = useState('SMC Liquidity Grab');
   const [notes, setNotes] = useState('');
   const [screenshotUrl, setScreenshotUrl] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (initialTrade) {
@@ -56,27 +57,34 @@ export default function TradeModal({
       setNotes('');
       setScreenshotUrl('');
     }
+    setIsLoading(false);
   }, [initialTrade, isOpen]);
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onSave({
-      id: initialTrade?.id,
-      pair,
-      type,
-      entryPrice: parseFloat(entryPrice) || 0,
-      exitPrice: parseFloat(exitPrice) || 0,
-      lotSize: parseFloat(lotSize) || 0.1,
-      pnl: parseFloat(pnl) || 0,
-      rrRatio: parseFloat(rrRatio) || 1.0,
-      strategy,
-      notes,
-      screenshotUrl: screenshotUrl || 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=800&auto=format&fit=crop&q=80',
-      date: initialTrade?.date || new Date().toISOString(),
-    });
-    onClose();
+    setIsLoading(true);
+
+    try {
+      await onSave({
+        id: initialTrade?.id,
+        pair,
+        type,
+        entryPrice: parseFloat(entryPrice) || 0,
+        exitPrice: parseFloat(exitPrice) || 0,
+        lotSize: parseFloat(lotSize) || 0.1,
+        pnl: parseFloat(pnl) || 0,
+        rrRatio: parseFloat(rrRatio) || 1.0,
+        strategy,
+        notes,
+        screenshotUrl: screenshotUrl || 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=800&auto=format&fit=crop&q=80',
+        date: initialTrade?.date || new Date().toISOString(),
+      });
+      onClose();
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -88,7 +96,8 @@ export default function TradeModal({
           </h3>
           <button
             onClick={onClose}
-            className="p-2 text-[#6B7C72] hover:text-[#1E2923] hover:bg-[#F8FAF9] rounded-xl transition-colors"
+            disabled={isLoading}
+            className="p-2 text-[#6B7C72] hover:text-[#1E2923] hover:bg-[#F8FAF9] rounded-xl transition-colors btn-touch-target flex items-center justify-center disabled:opacity-50"
           >
             <X className="w-5 h-5" />
           </button>
@@ -96,90 +105,76 @@ export default function TradeModal({
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
-            {/* Pair */}
             <div>
-              <label className="block text-xs font-bold text-[#1E2923] uppercase mb-1">
-                {t('pair')}
-              </label>
-              <select
+              <label className="block text-xs font-bold text-[#1E2923] uppercase mb-1">Pair / Aset</label>
+              <input
+                type="text"
+                required
                 value={pair}
                 onChange={(e) => setPair(e.target.value)}
-                className="w-full p-3 rounded-xl border border-[#E4E9E6] bg-[#F8FAF9] text-sm text-[#1E2923] font-bold focus:border-[#05C46B] outline-none"
-              >
-                <option value="XAU/USD">XAU/USD (Gold)</option>
-                <option value="EUR/USD">EUR/USD</option>
-                <option value="GBP/USD">GBP/USD</option>
-                <option value="GBP/JPY">GBP/JPY</option>
-                <option value="BTC/USD">BTC/USD (Bitcoin)</option>
-                <option value="USD/JPY">USD/JPY</option>
-              </select>
+                placeholder="XAU/USD, EUR/USD..."
+                className="w-full p-3 rounded-xl border border-[#E4E9E6] bg-[#F8FAF9] text-sm text-[#1E2923] font-semibold outline-none focus:border-[#05C46B] transition-colors"
+              />
             </div>
-
-            {/* Position Type */}
             <div>
-              <label className="block text-xs font-bold text-[#1E2923] uppercase mb-1">
-                {t('type')}
-              </label>
-              <div className="grid grid-cols-2 gap-2">
+              <label className="block text-xs font-bold text-[#1E2923] uppercase mb-1">Posisi Trading</label>
+              <div className="grid grid-cols-2 gap-2 bg-[#F8FAF9] p-1 rounded-xl border border-[#E4E9E6]">
                 <button
                   type="button"
                   onClick={() => setType('BUY')}
-                  className={`py-2.5 rounded-xl font-extrabold text-sm border transition-all ${
+                  className={`py-2 rounded-lg text-xs font-extrabold transition-all btn-touch-target flex items-center justify-center ${
                     type === 'BUY'
-                      ? 'bg-[#05C46B] text-white border-[#05C46B] shadow-md shadow-[#05C46B]/20'
-                      : 'bg-[#F8FAF9] text-[#6B7C72] border-[#E4E9E6]'
+                      ? 'bg-[#05C46B] text-white shadow-sm'
+                      : 'text-[#6B7C72] hover:text-[#1E2923]'
                   }`}
                 >
-                  BUY 🟢
+                  BUY 🚀
                 </button>
                 <button
                   type="button"
                   onClick={() => setType('SELL')}
-                  className={`py-2.5 rounded-xl font-extrabold text-sm border transition-all ${
+                  className={`py-2 rounded-lg text-xs font-extrabold transition-all btn-touch-target flex items-center justify-center ${
                     type === 'SELL'
-                      ? 'bg-[#FF4D4D] text-white border-[#FF4D4D] shadow-md shadow-[#FF4D4D]/20'
-                      : 'bg-[#F8FAF9] text-[#6B7C72] border-[#E4E9E6]'
+                      ? 'bg-[#FF4D4D] text-white shadow-sm'
+                      : 'text-[#6B7C72] hover:text-[#1E2923]'
                   }`}
                 >
-                  SELL 🔴
+                  SELL 🔻
                 </button>
               </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-bold text-[#1E2923] uppercase mb-1">
-                {t('entryPrice')}
-              </label>
+              <label className="block text-xs font-bold text-[#1E2923] uppercase mb-1">Entry Price</label>
               <input
                 type="number"
                 step="any"
                 required
                 value={entryPrice}
                 onChange={(e) => setEntryPrice(e.target.value)}
-                placeholder="2410.50"
-                className="w-full p-3 rounded-xl border border-[#E4E9E6] bg-[#F8FAF9] text-sm font-semibold text-[#1E2923] focus:border-[#05C46B] outline-none"
+                placeholder="2035.50"
+                className="w-full p-3 rounded-xl border border-[#E4E9E6] bg-[#F8FAF9] text-sm text-[#1E2923] font-semibold outline-none focus:border-[#05C46B] transition-colors"
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-[#1E2923] uppercase mb-1">
-                {t('exitPrice')}
-              </label>
+              <label className="block text-xs font-bold text-[#1E2923] uppercase mb-1">Exit Price</label>
               <input
                 type="number"
                 step="any"
                 required
                 value={exitPrice}
                 onChange={(e) => setExitPrice(e.target.value)}
-                placeholder="2435.00"
-                className="w-full p-3 rounded-xl border border-[#E4E9E6] bg-[#F8FAF9] text-sm font-semibold text-[#1E2923] focus:border-[#05C46B] outline-none"
+                placeholder="2045.00"
+                className="w-full p-3 rounded-xl border border-[#E4E9E6] bg-[#F8FAF9] text-sm text-[#1E2923] font-semibold outline-none focus:border-[#05C46B] transition-colors"
               />
             </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-3">
             <div>
-              <label className="block text-xs font-bold text-[#1E2923] uppercase mb-1">
-                {t('lotSize')}
-              </label>
+              <label className="block text-xs font-bold text-[#1E2923] uppercase mb-1">Lot Size</label>
               <input
                 type="number"
                 step="0.01"
@@ -187,55 +182,59 @@ export default function TradeModal({
                 value={lotSize}
                 onChange={(e) => setLotSize(e.target.value)}
                 placeholder="1.0"
-                className="w-full p-3 rounded-xl border border-[#E4E9E6] bg-[#F8FAF9] text-sm font-semibold text-[#1E2923] focus:border-[#05C46B] outline-none"
+                className="w-full p-3 rounded-xl border border-[#E4E9E6] bg-[#F8FAF9] text-sm text-[#1E2923] font-semibold outline-none focus:border-[#05C46B] transition-colors"
               />
             </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-bold text-[#1E2923] uppercase mb-1">
-                {t('pnl')} (+ / -)
-              </label>
+              <label className="block text-xs font-bold text-[#1E2923] uppercase mb-1">PnL Net</label>
               <input
                 type="number"
                 step="any"
                 required
                 value={pnl}
                 onChange={(e) => setPnl(e.target.value)}
-                placeholder="500.00 or -150.00"
-                className="w-full p-3 rounded-xl border border-[#E4E9E6] bg-[#F8FAF9] text-sm font-bold text-[#1E2923] focus:border-[#05C46B] outline-none"
+                placeholder="+150 / -50"
+                className="w-full p-3 rounded-xl border border-[#E4E9E6] bg-[#F8FAF9] text-sm text-[#1E2923] font-semibold outline-none focus:border-[#05C46B] transition-colors"
               />
             </div>
-
             <div>
-              <label className="block text-xs font-bold text-[#1E2923] uppercase mb-1">
-                {t('strategy')}
-              </label>
-              <select
-                value={strategy}
-                onChange={(e) => setStrategy(e.target.value)}
-                className="w-full p-3 rounded-xl border border-[#E4E9E6] bg-[#F8FAF9] text-sm font-semibold text-[#1E2923] focus:border-[#05C46B] outline-none"
-              >
-                <option value="SMC Liquidity Grab">SMC Liquidity Grab</option>
-                <option value="ICT Order Block Breaker">ICT Order Block Breaker</option>
-                <option value="Breakout Retest">Breakout Retest</option>
-                <option value="Scalping Momentum">Scalping Momentum</option>
-                <option value="Price Action Rejection">Price Action Rejection</option>
-              </select>
+              <label className="block text-xs font-bold text-[#1E2923] uppercase mb-1">R:R Ratio</label>
+              <input
+                type="number"
+                step="0.1"
+                required
+                value={rrRatio}
+                onChange={(e) => setRrRatio(e.target.value)}
+                placeholder="2.5"
+                className="w-full p-3 rounded-xl border border-[#E4E9E6] bg-[#F8FAF9] text-sm text-[#1E2923] font-semibold outline-none focus:border-[#05C46B] transition-colors"
+              />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-[#1E2923] uppercase mb-1">
-              {t('notes')}
-            </label>
+            <label className="block text-xs font-bold text-[#1E2923] uppercase mb-1">Strategi / Setup</label>
+            <select
+              value={strategy}
+              onChange={(e) => setStrategy(e.target.value)}
+              className="w-full p-3 rounded-xl border border-[#E4E9E6] bg-[#F8FAF9] text-sm text-[#1E2923] font-semibold outline-none focus:border-[#05C46B] transition-colors cursor-pointer"
+            >
+              <option value="SMC Liquidity Grab">SMC Liquidity Grab</option>
+              <option value="Breakout Retest">Breakout Retest</option>
+              <option value="Supply & Demand Zone">Supply & Demand Zone</option>
+              <option value="Trendline Bounce">Trendline Bounce</option>
+              <option value="Filla 9 Naga Scalp">Filla 9 Naga Scalp</option>
+              <option value="Order Block Entry">Order Block Entry</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-[#1E2923] uppercase mb-1">Catatan Transaksi</label>
             <textarea
               rows={2}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="Catatan psikologi, alasan entry, FVG, sweep..."
-              className="w-full p-3 rounded-xl border border-[#E4E9E6] bg-[#F8FAF9] text-sm text-[#1E2923] focus:border-[#05C46B] outline-none"
+              placeholder="Catatan psikologi, konfirmasi setup..."
+              className="w-full p-3 rounded-xl border border-[#E4E9E6] bg-[#F8FAF9] text-sm text-[#1E2923] outline-none focus:border-[#05C46B] transition-colors"
             />
           </div>
 
@@ -251,7 +250,7 @@ export default function TradeModal({
                   className="w-full h-40 object-cover"
                 />
                 <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center space-x-3 transition-opacity">
-                  <label className="px-3 py-1.5 rounded-xl bg-white text-[#1E2923] text-xs font-extrabold cursor-pointer hover:bg-[#E4E9E6] transition-colors">
+                  <label className="px-3 py-1.5 rounded-xl bg-white text-[#1E2923] text-xs font-extrabold cursor-pointer hover:bg-[#E4E9E6] transition-colors btn-touch-target flex items-center justify-center">
                     <span>Ganti Foto</span>
                     <input
                       type="file"
@@ -269,7 +268,7 @@ export default function TradeModal({
                   <button
                     type="button"
                     onClick={() => setScreenshotUrl('')}
-                    className="px-3 py-1.5 rounded-xl bg-[#FF4D4D] text-white text-xs font-extrabold hover:bg-[#E63939] transition-colors"
+                    className="px-3 py-1.5 rounded-xl bg-[#FF4D4D] text-white text-xs font-extrabold hover:bg-[#E63939] transition-colors btn-touch-target flex items-center justify-center"
                   >
                     Hapus
                   </button>
@@ -278,12 +277,7 @@ export default function TradeModal({
             ) : (
               <label className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-[#05C46B]/40 hover:border-[#05C46B] bg-[#E6F7F0]/30 hover:bg-[#E6F7F0]/60 rounded-2xl cursor-pointer transition-all text-center">
                 <Upload className="w-8 h-8 text-[#05C46B] mb-2" />
-                <span className="text-xs font-extrabold text-[#1E2923]">
-                  Pilih Screenshot Chart dari HP / Laptop
-                </span>
-                <span className="text-[11px] text-[#6B7C72] mt-0.5 font-medium">
-                  Klik di sini untuk upload foto TradingView / MetaTrader
-                </span>
+                <span className="text-xs font-extrabold text-[#1E2923]">Pilih Screenshot Chart</span>
                 <input
                   type="file"
                   accept="image/*"
@@ -304,16 +298,27 @@ export default function TradeModal({
             <button
               type="button"
               onClick={onClose}
-              className="px-5 py-2.5 rounded-xl border border-[#E4E9E6] text-sm font-bold text-[#6B7C72] hover:bg-[#F8FAF9]"
+              disabled={isLoading}
+              className="px-5 py-2.5 rounded-xl border border-[#E4E9E6] text-sm font-bold text-[#6B7C72] hover:bg-[#F8FAF9] btn-touch-target flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {t('cancel')}
             </button>
             <button
               type="submit"
-              className="px-6 py-2.5 rounded-xl bg-[#05C46B] hover:bg-[#04A75B] text-white text-sm font-bold shadow-md shadow-[#05C46B]/20 flex items-center space-x-2"
+              disabled={isLoading}
+              className="px-6 py-2.5 rounded-xl bg-[#05C46B] hover:bg-[#04A75B] text-white text-sm font-bold shadow-md shadow-[#05C46B]/20 flex items-center space-x-2 btn-touch-target justify-center disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <Save className="w-4 h-4" />
-              <span>{t('save')}</span>
+              {isLoading ? (
+                <>
+                  <Loader className="w-4 h-4 animate-spin" />
+                  <span>Memproses...</span>
+                </>
+              ) : (
+                <>
+                  <Save className="w-4 h-4" />
+                  <span>{t('save')}</span>
+                </>
+              )}
             </button>
           </div>
         </form>

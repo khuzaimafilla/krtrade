@@ -67,6 +67,38 @@ h1, h2, h3, h4, h5, h6 {
   animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
+/* Touch Target & Responsive Touch Optimization */
+* {
+  touch-action: manipulation;
+}
+
+button, 
+a, 
+input, 
+select, 
+textarea, 
+[role="button"] {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.btn-touch-target {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+button:not(:disabled),
+a:not(:disabled),
+[role="button"]:not(:disabled) {
+  transition: transform 0.15s ease, opacity 0.15s ease, background-color 0.15s ease;
+}
+
+button:not(:disabled):active,
+a:not(:disabled):active,
+[role="button"]:not(:disabled):active {
+  transform: scale(0.96);
+  opacity: 0.85;
+}
+
 .tradewire-card {
   background-color: var(--card-bg);
   border: 1px solid var(--card-border);

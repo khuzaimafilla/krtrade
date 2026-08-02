@@ -58,6 +58,9 @@ export const viewport: Viewport = {
   maximumScale: 1,
 };
 
+import GlobalProgressBar from "@/components/common/GlobalProgressBar";
+import { Suspense } from "react";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -68,6 +71,9 @@ export default function RootLayout({
       <body className="min-h-screen bg-[#F8FAF9] text-[#1E2923] flex flex-col antialiased font-poppins">
         <LanguageProvider>
           <AuthProvider>
+            <Suspense fallback={null}>
+              <GlobalProgressBar />
+            </Suspense>
             <SplashScreen />
             <Navbar />
             <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-20 md:pb-8">
