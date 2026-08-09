@@ -41,6 +41,8 @@ export default function CommunityPage() {
   const [newGroupName, setNewGroupName] = useState('');
   const [newGroupCode, setNewGroupCode] = useState('');
   const [newGroupDesc, setNewGroupDesc] = useState('');
+  const [isCreating, setIsCreating] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Join Group State
   const [isJoinOpen, setIsJoinOpen] = useState(false);
@@ -82,7 +84,8 @@ export default function CommunityPage() {
 
   const handleCreateGroup = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newGroupName) return;
+    if (!newGroupName || isCreating) return;
+    setIsCreating(true);
 
     try {
       const res = await fetch('/api/community', {
@@ -97,18 +100,19 @@ export default function CommunityPage() {
       if (res.ok) {
         showToast(`Grup "${newGroupName}" berhasil dibuat! Anda otomatis menjadi Admin.`);
         loadGroups();
+        setIsCreateOpen(false);
+        setNewGroupName('');
+        setNewGroupCode('');
+        setNewGroupDesc('');
       } else {
         const errorData = await res.json();
         showToast(errorData.error || 'Gagal membuat grup', 'error');
       }
     } catch (err) {
       showToast('Gagal membuat grup', 'error');
+    } finally {
+      setIsCreating(false);
     }
-
-    setIsCreateOpen(false);
-    setNewGroupName('');
-    setNewGroupCode('');
-    setNewGroupDesc('');
   };
 
   const handleRequestJoin = async (e: React.FormEvent) => {
@@ -236,6 +240,31 @@ export default function CommunityPage() {
     });
     saveGroups(updated);
     showToast(`Anda telah keluar dari grup "${group.name}".`, 'info');
+  };
+
+  const handleDeleteGroup = async (id: string) => {
+    if (!confirm('Anda yakin ingin menghapus grup ini? Seluruh data akan hilang.')) return;
+    if (isDeleting) return;
+    setIsDeleting(true);
+
+    try {
+      const res = await fetch(`/api/community/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        showToast('Grup berhasil dihapus', 'success');
+        setGroups((prev) => prev.filter(g => g.id !== id));
+        if (selectedAdminGroup?.id === id) {
+          setIsAdminModalOpen(false);
+          setSelectedAdminGroup(null);
+        }
+      } else {
+        const errorData = await res.json();
+        showToast(errorData.error || 'Gagal menghapus grup', 'error');
+      }
+    } catch (error) {
+      showToast('Terjadi kesalahan', 'error');
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const handleKickMember = (groupId: string, memberId: string) => {
@@ -627,6 +656,20 @@ export default function CommunityPage() {
                 })
               )}
             </div>
+
+            {selectedAdminGroup.createdBy === user?.id && (
+              <div className="mt-4 pt-4 border-t border-[#E4E9E6] flex justify-end">
+                <button
+                  type="button"
+                  disabled={isDeleting}
+                  onClick={() => handleDeleteGroup(selectedAdminGroup.id)}
+                  className="px-4 py-2.5 rounded-xl bg-[#FF4D4D]/10 hover:bg-[#FF4D4D] text-[#FF4D4D] hover:text-white text-xs font-extrabold border border-[#FF4D4D]/30 flex items-center space-x-1 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <XCircle className="w-4 h-4" />
+                  <span>{isDeleting ? 'Menghapus...' : 'Hapus Komunitas'}</span>
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -703,9 +746,10 @@ export default function CommunityPage() {
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2.5 bg-[#05C46B] hover:bg-[#04A75B] text-white font-extrabold text-xs rounded-xl shadow-md shadow-[#05C46B]/20 transition-all"
+                  disabled={isCreating}
+                  className="px-5 py-2.5 rounded-xl bg-[#05C46B] hover:bg-[#04B05F] text-white text-xs font-extrabold shadow-lg shadow-[#05C46B]/30 transition-all hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0"
                 >
-                  Buat Grup
+                  {isCreating ? 'Membuat...' : t('createGroupBtn')}
                 </button>
               </div>
             </form>

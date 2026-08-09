@@ -165,7 +165,7 @@ export default function ProfilePage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-bold text-[#1E2923] uppercase mb-1 flex items-center space-x-1.5">
-                <span>Nama Lengkap (Discord)</span>
+                <span>User ID (Discord)</span>
                 <Lock className="w-3 h-3 text-[#6B7C72]" />
               </label>
               <input
