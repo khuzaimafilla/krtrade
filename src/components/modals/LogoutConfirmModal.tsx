@@ -37,7 +37,7 @@ export default function LogoutConfirmModal({ isOpen, onConfirm, onClose }: Logou
         </h3>
 
         <p className="text-xs text-[#6B7C72] leading-relaxed mb-6 font-medium">
-          Apakah Anda yakin ingin keluar dari akun <strong>KRtrade</strong> Anda? Sesi login Anda akan diakhiri dan dialihkan ke halaman Welcome.
+          Apakah Anda yakin ingin keluar dari akun <strong>KRTrade</strong> Anda? Sesi login Anda akan diakhiri dan dialihkan ke halaman Welcome.
         </p>
 
         {/* Actions */}

@@ -24,13 +24,13 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-  title: "KRtrade by Filla Calon Wong Sugih 9 Naga",
+  title: "KRTrade - Kronik & Rewards",
   description: "Web-Based Trading Journal & Community PWA for 9 Naga Level Traders. Record trades, manage risk, & view multi-filter leaderboards.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "KRtrade",
+    title: "KRTrade",
   },
   icons: {
     icon: [{ url: "/logo.png", type: "image/png" }],
@@ -54,8 +54,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="id" className={`${montserrat.variable} ${poppins.variable}`}>
-      <body className="min-h-screen bg-[#F8FAF9] text-[#1E2923] flex flex-col antialiased font-poppins">
+    <html lang="id" className={`${montserrat.variable} ${poppins.variable} overflow-x-hidden`}>
+      <body className="min-h-screen bg-[#F8FAFC] text-[#1E2923] flex flex-col antialiased font-poppins overflow-x-hidden">
         {/* SessionProvider must wrap everything for NextAuth useSession to work */}
         <SessionProvider>
           <LanguageProvider>

@@ -43,7 +43,7 @@ export default function AuthPage() {
   }
 
   return (
-    <div className="min-h-screen w-full bg-[#f8fafc] flex flex-col items-center justify-center p-4 font-poppins">
+    <div className="min-h-screen w-full bg-[#f8fafc] flex flex-col items-center justify-center p-4 font-poppins overflow-x-hidden">
       
       {/* Main Login Card */}
       <div className="bg-white border border-slate-100 shadow-2xl shadow-slate-200/60 rounded-[2rem] p-8 max-w-md w-full text-center relative overflow-hidden">
@@ -68,7 +68,7 @@ export default function AuthPage() {
             </div>
             <div>
               <h1 className="text-2xl font-black text-slate-800 font-montserrat tracking-tight">
-                Welcome to KRtrade!
+                Welcome to KRTrade!
               </h1>
               <p className="text-[#10B981] font-bold text-xs mt-1 tracking-wider">BETA v0.0.0.1</p>
               <p className="text-slate-500 text-sm mt-3 font-medium px-4">
@@ -82,7 +82,7 @@ export default function AuthPage() {
             id="discord-login-btn"
             onClick={handleDiscordLogin}
             disabled={isLoading}
-            className="bg-[#5865F2] hover:bg-[#4752C4] active:scale-95 text-white font-semibold py-3.5 px-6 rounded-2xl shadow-lg shadow-[#5865F2]/25 transition-all duration-200 flex items-center justify-center gap-3 w-full min-h-[48px] cursor-pointer hover:-translate-y-0.5 mt-2"
+            className="bg-[#5865F2] hover:bg-[#4752C4] active:scale-95 text-white font-semibold py-3.5 px-6 rounded-2xl shadow-md shadow-[#5865F2]/20 transition-all duration-200 flex items-center justify-center gap-3 w-full min-h-[48px] cursor-pointer hover:-translate-y-0.5 mt-2"
           >
             {isLoading ? (
               <>
@@ -125,7 +125,7 @@ export default function AuthPage() {
       </div>
       
       <p className="text-center text-slate-400 text-[10px] font-semibold mt-8">
-        KRtrade Beta v0.0.0.1 · By Khuzaima Filla
+        KRTrade Beta v0.0.0.1 · By Khuzaima Filla
       </p>
 
     </div>

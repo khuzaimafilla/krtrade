@@ -13,7 +13,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   ],
   callbacks: {
     async session({ session, user }) {
-      // Attach database user id & KRtrade profile fields to session
+      // Attach database user id & KRTrade profile fields to session
       if (session.user && user) {
         session.user.id = user.id;
         // Fetch extended profile from DB

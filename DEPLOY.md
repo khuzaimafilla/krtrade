@@ -1,12 +1,12 @@
 # 🚀 DEPLOYMENT & PWA INSTALLATION GUIDE (DEPLOY.md)
-> **Aplikasi: KRtrade by Filla Calon Wong Sugih 9 Naga**  
+> **Aplikasi: KRTrade by Filla Calon Wong Sugih 9 Naga**  
 > *Versi Aplikasi: BETA Version 0.0.0.1*  
 > *Panduan Resmi Manual Deployment Vercel & Instalasi Cross-Platform (Laptop, PC, Android, iOS)*
 
 ---
 
 ## 📌 OVERVIEW
-Dokumen ini berisi panduan langkah demi langkah bagi Anda untuk mendeploy aplikasi **KRtrade** secara manual ke **Vercel**, mengonfigurasi database **Supabase PostgreSQL & Auth** di server produksi, serta menjadikan aplikasi ini sebagai **Progressive Web App (PWA)** yang dapat diinstal langsung di perangkat **Laptop/PC (Windows/Mac), Android, dan iOS (iPhone/iPad)**.
+Dokumen ini berisi panduan langkah demi langkah bagi Anda untuk mendeploy aplikasi **KRTrade** secara manual ke **Vercel**, mengonfigurasi database **Supabase PostgreSQL & Auth** di server produksi, serta menjadikan aplikasi ini sebagai **Progressive Web App (PWA)** yang dapat diinstal langsung di perangkat **Laptop/PC (Windows/Mac), Android, dan iOS (iPhone/iPad)**.
 
 ---
 
@@ -21,7 +21,7 @@ Dokumen ini berisi panduan langkah demi langkah bagi Anda untuk mendeploy aplika
 3. Tambahkan semua file dan buat commit awal:
    ```bash
    git add .
-   git commit -m "feat: Initial release KRtrade BETA Version 0.0.0.1"
+   git commit -m "feat: Initial release KRTrade BETA Version 0.0.0.1"
    ```
 4. Buat Repository baru di akun [GitHub](https://github.com/new) Anda (misal nama repo: `krtrade-pwa`).
 5. Hubungkan repo lokal dengan GitHub dan push kode:
@@ -79,18 +79,18 @@ Agar fitur Autentikasi Supabase dan Google OAuth dapat berjalan lancar di domain
 
 ## 📱 2. CARA MENJADIKAN APLIKASI WEB-BASED PWA DI BERBAGAI PERANGKAT
 
-Aplikasi **KRtrade** sudah dilengkapi dengan `manifest.json` dan arsitektur PWA Standalone. Pengguna tidak perlu mengunduh aplikasi di Play Store / App Store, cukup menggunakan browser bawaan perangkat.
+Aplikasi **KRTrade** sudah dilengkapi dengan `manifest.json` dan arsitektur PWA Standalone. Pengguna tidak perlu mengunduh aplikasi di Play Store / App Store, cukup menggunakan browser bawaan perangkat.
 
 ---
 
 ### A. 📱 Pengguna Smartphone Android (Chrome / Edge / Brave)
 1. Buka browser Chrome di HP Android Anda.
 2. Akses URL Vercel aplikasi Anda (misal: `https://krtrade-pwa.vercel.app`).
-3. Akan muncul banner pop-up otomatis di bawah layar: **"Add KRtrade to Home Screen"**.
+3. Akan muncul banner pop-up otomatis di bawah layar: **"Add KRTrade to Home Screen"**.
 4. Jika banner tidak muncul otomatis:
    - Ketuk **Ikon Titik Tiga (⋮)** di sudut kanan atas Chrome.
    - Pilih menu **"Tambahkan ke Layar Utama" / "Add to Home Screen"** atau **"Install App"**.
-5. Aplikasi **KRtrade** akan terinstall sebagai aplikasi independen di layar utama HP Android Anda dengan ikon resmi 9 Naga.
+5. Aplikasi **KRTrade** akan terinstall sebagai aplikasi independen di layar utama HP Android Anda dengan ikon resmi 9 Naga.
 
 ---
 
@@ -100,7 +100,7 @@ Aplikasi **KRtrade** sudah dilengkapi dengan `manifest.json` dan arsitektur PWA 
 3. Ketuk **Ikon Bagikan (Share Button)** (ikon kotak dengan panah mengarah ke atas di navigasi bawah Safari).
 4. Gulir ke bawah lalu pilih menu **"Tambahkan ke Layar Utama" / "Add to Home Screen"**.
 5. Ketuk **"Tambah" / "Add"** di sudut kanan atas.
-6. Aplikasi **KRtrade** kini terpasang di Home Screen iOS Anda dengan pengalaman Full-Screen App tanpa baris URL browser.
+6. Aplikasi **KRTrade** kini terpasang di Home Screen iOS Anda dengan pengalaman Full-Screen App tanpa baris URL browser.
 
 ---
 
@@ -109,9 +109,9 @@ Aplikasi **KRtrade** sudah dilengkapi dengan `manifest.json` dan arsitektur PWA 
 2. Akses URL Vercel aplikasi Anda (misal: `https://krtrade-pwa.vercel.app`).
 3. Perhatikan di sebelah kanan **Address Bar (Bilah Alamat URL)** atas:
    - Di Chrome: Klik ikon **Monitor / Install App** 📥 yang berada di samping ikon Bintang Bookmark.
-   - Di Edge: Klik ikon **App Available / Install KRtrade** 💻.
+   - Di Edge: Klik ikon **App Available / Install KRTrade** 💻.
 4. Klik **"Install"**.
-5. Aplikasi **KRtrade** akan terbuka di jendela aplikasi independen (Standalone Desktop Window) dan membuat shortcut otomatis di **Desktop** & **Start Menu Windows / Launchpad Mac**.
+5. Aplikasi **KRTrade** akan terbuka di jendela aplikasi independen (Standalone Desktop Window) dan membuat shortcut otomatis di **Desktop** & **Start Menu Windows / Launchpad Mac**.
 
 ---
 
@@ -131,4 +131,4 @@ npm run dev
 ```
 
 ---
-*Dokumen DEPLOY.md dibuat resmi untuk project KRtrade by Filla Calon Wong Sugih 9 Naga.*
+*Dokumen DEPLOY.md dibuat resmi untuk project KRTrade by Filla Calon Wong Sugih 9 Naga.*

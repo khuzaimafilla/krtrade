@@ -18,18 +18,18 @@ export default function BottomNav() {
   const pathname = usePathname();
   const { t } = useLanguage();
 
-  if (pathname === '/welcome' || pathname === '/auth') {
+  if (pathname === '/welcome' || pathname === '/auth' || pathname === '/onboarding') {
     return null;
   }
 
   const items = [
-    { href: '/dashboard', label: t('dashboard'), icon: LayoutDashboard },
-    { href: '/journal', label: t('journal'), icon: BookOpen },
-    { href: '/chart', label: 'Chart', icon: BarChart2 },
-    { href: '/community', label: t('community'), icon: Users },
-    { href: '/leaderboard', label: t('leaderboard'), icon: Trophy },
-    { href: '/profile', label: 'Profil', icon: User },
-    { href: '/settings', label: t('settings'), icon: Settings },
+    { href: '/dashboard', label: t('nav_dashboard'), icon: LayoutDashboard },
+    { href: '/journal', label: t('nav_journal'), icon: BookOpen },
+    { href: '/chart', label: t('nav_chart'), icon: BarChart2 },
+    { href: '/community', label: t('nav_community'), icon: Users },
+    { href: '/leaderboard', label: t('nav_leaderboard'), icon: Trophy },
+    { href: '/profile', label: t('nav_profile'), icon: User },
+    { href: '/settings', label: t('nav_settings'), icon: Settings },
   ];
 
   return (

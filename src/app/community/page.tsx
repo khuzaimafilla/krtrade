@@ -79,7 +79,16 @@ export default function CommunityPage() {
 
   // ── Core data loader (extracted so Realtime can re-call it) ──────────────
   const loadGroups = useCallback(async () => {
-    const storedLocal = getStoredGroups();
+    let storedLocal = getStoredGroups();
+    
+    // Hapus data dummy sample lama dari local storage (jika masih tersangkut)
+    const dummyIds = ['grp_1', 'grp_2', 'grp_3', 'grp_4'];
+    const hasDummy = storedLocal.some(g => dummyIds.includes(g.id));
+    if (hasDummy) {
+      storedLocal = storedLocal.filter(g => !dummyIds.includes(g.id));
+      setStoredGroups(storedLocal); // update clean local storage
+    }
+
     const requests = getStoredRequests();
 
     const userJoinedKey = user ? `krtrade_joined_${user.id}` : 'krtrade_joined_guest';
@@ -154,7 +163,7 @@ export default function CommunityPage() {
                 id: g.id,
                 name: g.name,
                 code: g.code,
-                description: g.description || 'Komunitas Trading Kolaboratif KRtrade Platform.',
+                description: g.description || 'Komunitas Trading Kolaboratif KRTrade Platform.',
                 membersCount: count || memberDetails.length || 1,
                 totalPnl: 0,
                 winRate: 0,
@@ -247,7 +256,7 @@ export default function CommunityPage() {
       const { data: newGrpData, error } = await supabase.from('groups').insert({
         name: newGroupName,
         code: newGroupCode.toUpperCase(),
-        description: newGroupDesc || 'Komunitas Trading Kolaboratif KRtrade Platform.',
+        description: newGroupDesc || 'Komunitas Trading Kolaboratif KRTrade Platform.',
         created_by: groupAdminId,
       }).select().single();
 
@@ -274,7 +283,7 @@ export default function CommunityPage() {
       id: newGroupId,
       name: newGroupName,
       code: newGroupCode.toUpperCase(),
-      description: newGroupDesc || 'Komunitas Trading Kolaboratif KRtrade Platform.',
+      description: newGroupDesc || 'Komunitas Trading Kolaboratif KRTrade Platform.',
       membersCount: 1,
       totalPnl: 0,
       winRate: 0,

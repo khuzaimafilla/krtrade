@@ -2,11 +2,33 @@ import { Language } from '@/types';
 
 export const translations: Record<Language, Record<string, string>> = {
   id: {
-    // General & Nav
-    appName: 'KRtrade',
+    // Nav & Dashboard Keys (Requested Refactor)
+    nav_dashboard: 'Dashboard',
+    nav_journal: 'Jurnal',
+    nav_chart: 'Grafik',
+    nav_community: 'Komunitas',
+    nav_leaderboard: 'Papan Peringkat',
+    nav_profile: 'Profil Saya',
+    nav_settings: 'Pengaturan',
+    btn_log_trade: 'Catat Trade Baru',
+    welcome_msg: 'Selamat datang kembali',
+    stat_total_equity: 'Total Ekuitas',
+    stat_total_pnl: 'Total PnL',
+    stat_winrate: 'Win Rate',
+    stat_profit_factor: 'Faktor Profit',
+    stat_streak: 'Beruntun Menang/Kalah',
+    modal_title_log: 'Catat Trade Baru',
+    field_pair: 'Pair / Aset',
+    field_outcome: 'Hasil Transaksi',
+    field_amount: 'Nominal PnL',
+    field_notes: 'Catatan Transaksi (Opsional)',
+    field_chart_url: 'URL Gambar Chart (Opsional)',
+
+    // General & Nav (Legacy)
+    appName: 'KRTrade',
     appSubtitle: 'BETA Version 0.0.0.1',
     dashboard: 'Dashboard',
-    journal: 'Jurnal Trading',
+    journal: 'Journal',
     community: 'Komunitas',
     leaderboard: 'Leaderboard',
     settings: 'Pengaturan',
@@ -18,13 +40,13 @@ export const translations: Record<Language, Record<string, string>> = {
     close: 'Tutup',
 
     // Welcome Page
-    welcomeHeader: 'Selamat Datang di KRtrade Trading Platform!',
+    welcomeHeader: 'Selamat Datang di KRTrade Trading Platform!',
     welcomeSubHeader: 'Portal Jurnal & Komunitas Trading Profesional',
     nextButton: 'Selanjutnya',
 
     // Auth Page
-    loginTitle: 'Masuk ke Akun KRtrade',
-    registerTitle: 'Daftar Akun KRtrade Baru',
+    loginTitle: 'Masuk ke Akun KRTrade',
+    registerTitle: 'Daftar Akun KRTrade Baru',
     emailOrUsername: 'Username / Email',
     fullName: 'Nama Lengkap',
     email: 'Email',
@@ -49,7 +71,7 @@ export const translations: Record<Language, Record<string, string>> = {
     checkboxFillaRichest: 'Saya mengakui bahwa Filla adalah orang paling kaya di dunia',
 
     // Dashboard
-    greetingBanner: 'Welcome back, King!',
+    greetingBanner: 'Selamat datang kembali, ',
     totalPnl: 'Total PnL ($)',
     winRate: 'Win Rate (%)',
     profitFactor: 'Profit Factor',
@@ -91,7 +113,7 @@ export const translations: Record<Language, Record<string, string>> = {
     groupCodePlaceholder: 'Masukkan 6-digit Kode Group...',
 
     // Leaderboard
-    leaderboardTitle: 'KRtrade Multi-Filter Leaderboard',
+    leaderboardTitle: 'KRTrade Multi-Filter Leaderboard',
     addFriendBtn: 'Tambah Teman',
     tabFriends: 'Friends Only',
     tabCommunity: 'Community Members',
@@ -116,11 +138,33 @@ export const translations: Record<Language, Record<string, string>> = {
     lockedNote: 'Gaya trading sudah dipilih saat registrasi dan tidak dapat diubah.',
   },
   en: {
-    // General & Nav
-    appName: 'KRtrade',
+    // Nav & Dashboard Keys (Requested Refactor)
+    nav_dashboard: 'Dashboard',
+    nav_journal: 'Journal',
+    nav_chart: 'Chart',
+    nav_community: 'Community',
+    nav_leaderboard: 'Leaderboard',
+    nav_profile: 'My Profile',
+    nav_settings: 'Settings',
+    btn_log_trade: 'Log New Trade',
+    welcome_msg: 'Welcome back',
+    stat_total_equity: 'Total Equity',
+    stat_total_pnl: 'Total PnL',
+    stat_winrate: 'Win Rate',
+    stat_profit_factor: 'Profit Factor',
+    stat_streak: 'Win/Loss Streak',
+    modal_title_log: 'Log New Trade',
+    field_pair: 'Pair / Asset',
+    field_outcome: 'Trade Outcome',
+    field_amount: 'PnL Amount',
+    field_notes: 'Transaction Notes (Optional)',
+    field_chart_url: 'Chart Image URL (Optional)',
+
+    // General & Nav (Legacy)
+    appName: 'KRTrade',
     appSubtitle: 'BETA Version 0.0.0.1',
     dashboard: 'Dashboard',
-    journal: 'Trading Journal',
+    journal: 'Journal',
     community: 'Community',
     leaderboard: 'Leaderboard',
     settings: 'Settings',
@@ -132,13 +176,13 @@ export const translations: Record<Language, Record<string, string>> = {
     close: 'Close',
 
     // Welcome Page
-    welcomeHeader: 'Welcome to KRtrade Trading Platform!',
+    welcomeHeader: 'Welcome to KRTrade Trading Platform!',
     welcomeSubHeader: 'Professional Trading Journal & Community Portal',
     nextButton: 'Next',
 
     // Auth Page
-    loginTitle: 'Login to KRtrade Account',
-    registerTitle: 'Register KRtrade Account',
+    loginTitle: 'Login to KRTrade Account',
+    registerTitle: 'Register KRTrade Account',
     emailOrUsername: 'Username / Email',
     fullName: 'Full Name',
     email: 'Email',
@@ -163,7 +207,7 @@ export const translations: Record<Language, Record<string, string>> = {
     checkboxFillaRichest: 'Saya mengakui bahwa Filla adalah orang paling kaya di dunia',
 
     // Dashboard
-    greetingBanner: 'Welcome back, King!',
+    greetingBanner: 'Welcome back, ',
     totalPnl: 'Total PnL ($)',
     winRate: 'Win Rate (%)',
     profitFactor: 'Profit Factor',
@@ -175,7 +219,7 @@ export const translations: Record<Language, Record<string, string>> = {
 
     // Journal
     journalTitle: 'Trading Journal Log',
-    addTradeBtn: '+ Log New Trade',
+    addTradeBtn: 'Log New Trade',
     pair: 'Pair / Asset',
     type: 'Position Type',
     entryPrice: 'Entry Price',
@@ -205,7 +249,7 @@ export const translations: Record<Language, Record<string, string>> = {
     groupCodePlaceholder: 'Enter 6-digit Group Code...',
 
     // Leaderboard
-    leaderboardTitle: 'KRtrade Multi-Filter Leaderboard',
+    leaderboardTitle: 'KRTrade Multi-Filter Leaderboard',
     addFriendBtn: 'Add Friend',
     tabFriends: 'Friends Only',
     tabCommunity: 'Community Members',

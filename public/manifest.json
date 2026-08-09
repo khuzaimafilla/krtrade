@@ -1,7 +1,7 @@
 {
-  "name": "KRtrade by Filla Calon Wong Sugih 9 Naga",
-  "short_name": "KRtrade",
-  "description": "Trading Journal & Community PWA for 9 Naga Level Traders",
+  "name": "KRTrade - Kronik & Rewards",
+  "short_name": "KRTrade",
+  "description": "Trading Journal & Community PWA",
   "start_url": "/welcome",
   "display": "standalone",
   "background_color": "#042f2e",

@@ -366,7 +366,7 @@ export default function KRChart({
       {/* ── Footer ──────────────────────────────────────────────────────── */}
       <div className="px-4 py-2 border-t border-[#1E293B] flex items-center justify-between">
         <span className="text-[10px] text-slate-600 font-medium">
-          KRtrade Chart Engine • Data simulasi realistis
+          KRTrade Chart Engine • Data simulasi realistis
         </span>
         {rrMarker && rr && (
           <div className="flex items-center space-x-3 text-[10px] font-bold">

@@ -93,7 +93,7 @@ export default function TradeCardExport({
         <div className="flex items-center justify-between mb-4 px-1">
           <div className="flex items-center space-x-2">
             <Share2 className="w-4 h-4 text-[#D4AF37]" />
-            <span className="text-white font-extrabold text-sm">Victory Card KRtrade</span>
+            <span className="text-white font-extrabold text-sm">Victory Card KRTrade</span>
           </div>
           <button
             onClick={onClose}
@@ -140,7 +140,7 @@ export default function TradeCardExport({
                   <TrendingUp className="w-4 h-4 text-white" />
                 </div>
                 <div>
-                  <p className="text-white font-black text-sm leading-none">KRtrade</p>
+                  <p className="text-white font-black text-sm leading-none">KRTrade</p>
                   <p className="text-[10px] text-white/60 font-medium">Kronik Reward</p>
                 </div>
               </div>
@@ -227,7 +227,7 @@ export default function TradeCardExport({
             {/* Watermark */}
             <div className="mt-3 text-center">
               <p className="text-white/20 text-[9px] font-medium tracking-widest uppercase">
-                KRtrade — Kronik Reward Journaling Platform
+                KRTrade — Kronik Reward Journaling Platform
               </p>
             </div>
           </div>

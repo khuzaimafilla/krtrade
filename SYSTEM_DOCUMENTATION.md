@@ -1,11 +1,11 @@
-# 📘 SYSTEM DOCUMENTATION: KRtrade PWA Application
-> **"KRtrade" by Filla Calon Wong Sugih 9 Naga**  
+# 📘 SYSTEM DOCUMENTATION: KRTrade PWA Application
+> **"KRTrade" by Filla Calon Wong Sugih 9 Naga**  
 > *Versi Aplikasi: BETA Version 0.0.0.1*
 
 ---
 
 ## 📌 Executive Summary
-**KRtrade** adalah aplikasi Web-Based Trading Journal & Community (PWA) yang dirancang ultra-responsif, ringan, dan siap pakai melintasi perangkat Desktop, Laptop, Android, dan iOS. Aplikasi ini dibangun dengan arsitektur modern Next.js 16 (App Router + Webpack), React 19, Google Fonts (Montserrat & Poppins), Tailwind CSS (Tradewire Financial Light Mode Theme), Supabase Backend (PostgreSQL Database & Supabase Auth), serta sistem multi-bahasa (i18n) dan penyimpanan state lokal (fallback-safe).
+**KRTrade** adalah aplikasi Web-Based Trading Journal & Community (PWA) yang dirancang ultra-responsif, ringan, dan siap pakai melintasi perangkat Desktop, Laptop, Android, dan iOS. Aplikasi ini dibangun dengan arsitektur modern Next.js 16 (App Router + Webpack), React 19, Google Fonts (Montserrat & Poppins), Tailwind CSS (Tradewire Financial Light Mode Theme), Supabase Backend (PostgreSQL Database & Supabase Auth), serta sistem multi-bahasa (i18n) dan penyimpanan state lokal (fallback-safe).
 
 ---
 

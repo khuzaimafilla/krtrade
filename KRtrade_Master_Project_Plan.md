@@ -1,10 +1,10 @@
-# PROJECT PLAN: KRtrade App (V3 - Final Master Edition)
-> **"KRtrade" by Filla Calon Wong Sugih 9 Naga**
+# PROJECT PLAN: KRTrade App (V3 - Final Master Edition)
+> **"KRTrade" by Filla Calon Wong Sugih 9 Naga**
 
 ---
 
 ## 📌 Executive Summary
-**KRtrade** adalah aplikasi Web-Based Trading Journal & Community (PWA) yang ringan, ultra-responsif, dan dapat diakses melintasi semua platform (PC, Laptop, Android, iOS). Aplikasi ini dirancang menggunakan arsitektur modern (Next.js + Tailwind CSS + Supabase) dengan tema visual **Tradewire Financial Light Mode** (Hijau Emerald, Off-White, & Clean Modern Typography) serta pendekatan branding yang elegan, eksklusif, dan humoris/berkarakter.
+**KRTrade** adalah aplikasi Web-Based Trading Journal & Community (PWA) yang ringan, ultra-responsif, dan dapat diakses melintasi semua platform (PC, Laptop, Android, iOS). Aplikasi ini dirancang menggunakan arsitektur modern (Next.js + Tailwind CSS + Supabase) dengan tema visual **Tradewire Financial Light Mode** (Hijau Emerald, Off-White, & Clean Modern Typography) serta pendekatan branding yang elegan, eksklusif, dan humoris/berkarakter.
 
 ---
 
@@ -42,7 +42,7 @@
 1. **Header / Main Title:**
    > *"Selamat Datang di Aplikasi Pencatatan Orang Kaya!"*
 2. **App Branding (Bold Small):**
-   > **KRtrade**
+   > **KRTrade**
 3. **App Subtitle / Version Tag:**
    > `Version: Filla F nya Ferari` (Text Muted / Gold Badge)
 4. **Action Button:**
@@ -91,7 +91,7 @@
 - **Scope Switcher (Tab Filter 1):**
   - `Friends Only` (Hanya dari daftar teman terdekat)
   - `Community / Group Members` (Khusus member dalam komunitas tertentu)
-  - `Global` (Seluruh pengguna KRtrade)
+  - `Global` (Seluruh pengguna KRTrade)
 - **Trading Style Filter (Tab Filter 2):**
   - `All Methods` | `Scalping` | `Intraday` | `Swing Trade`
 - **Leaderboard Data Columns:**
@@ -136,14 +136,14 @@
 Copy & Paste prompt di bawah ini langsung ke **Google Antigravity Agent** untuk memulai eksekusi otomatis:
 
 ```markdown
-You are an expert Full-Stack Engineer. Build a production-ready, lightweight, web-based Trading Journal PWA named "KRtrade by Filla Calon Wong Sugih 9 Naga".
+You are an expert Full-Stack Engineer. Build a production-ready, lightweight, web-based Trading Journal PWA named "KRTrade by Filla Calon Wong Sugih 9 Naga".
 
 ### 🎯 PROJECT SUMMARY & ONBOARDING FLOW
 Implement a complete Multi-language Next.js App Router application with the following user flow:
 1. Language Selector Modal on first visit (Bahasa Indonesia vs English). Language preference must be editable in Settings.
 2. Welcome Page (`/welcome`):
    - Main Header: "Selamat Datang di Aplikasi Pencatatan Orang Kaya!"
-   - Bold App Name: "KRtrade"
+   - Bold App Name: "KRTrade"
    - Subtitle: "Version: Filla F nya Ferari"
    - Button: "Selanjutnya / Next" -> Redirects to Login/Register.
 3. Authentication System (`/auth`):

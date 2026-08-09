@@ -22,7 +22,7 @@ export default function SettingsPage() {
           {t('settingsTitle')}
         </h1>
         <p className="text-xs text-[#6B7C72] mt-1 font-medium">
-          Pengaturan Bahasa Aplikasi & Konfigurasi Pengguna KRtrade
+          Pengaturan Bahasa Aplikasi & Konfigurasi Pengguna KRTrade
         </p>
       </div>
 
@@ -118,7 +118,7 @@ export default function SettingsPage() {
           <div>
             <h3 className="font-extrabold text-[#1E2923] text-base font-montserrat flex items-center space-x-2">
               <LogOut className="w-5 h-5 text-[#FF4D4D]" />
-              <span>Keluar dari Akun KRtrade</span>
+              <span>Keluar dari Akun KRTrade</span>
             </h3>
             <p className="text-xs text-[#6B7C72] mt-1 font-medium">
               Akhiri sesi login pengguna aktif dan kembali ke halaman Welcome.

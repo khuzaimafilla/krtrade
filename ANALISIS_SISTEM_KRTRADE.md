@@ -1,12 +1,12 @@
 # 📊 ANALISIS SISTEM, FLOW, FITUR, KOMPONEN & LIBRARY
-> **Aplikasi: KRtrade by Filla Calon Wong Sugih 9 Naga**  
+> **Aplikasi: KRTrade by Filla Calon Wong Sugih 9 Naga**  
 > *Versi Aplikasi: BETA Version 0.0.0.1*  
 > *Dokumen Hasil Audit & Analisis Arsitektur Aplikasi*
 
 ---
 
 ## 📌 Executive Summary
-**KRtrade** adalah aplikasi Web-Based Trading Journal & Community (PWA) yang ultra-responsif, ringan, dan siap pakai melintasi perangkat Desktop, Laptop, Android, dan iOS. Aplikasi ini dibangun menggunakan stack modern Next.js 16 (App Router + Webpack), React 19, Google Fonts (Montserrat & Poppins), Tailwind CSS v4 (Tradewire Light Theme), Lucide Icons, Lightweight Charts, serta Supabase Backend (PostgreSQL Database & Supabase Auth) dengan fallback otomatis ke *persistent local storage*.
+**KRTrade** adalah aplikasi Web-Based Trading Journal & Community (PWA) yang ultra-responsif, ringan, dan siap pakai melintasi perangkat Desktop, Laptop, Android, dan iOS. Aplikasi ini dibangun menggunakan stack modern Next.js 16 (App Router + Webpack), React 19, Google Fonts (Montserrat & Poppins), Tailwind CSS v4 (Tradewire Light Theme), Lucide Icons, Lightweight Charts, serta Supabase Backend (PostgreSQL Database & Supabase Auth) dengan fallback otomatis ke *persistent local storage*.
 
 ---
 

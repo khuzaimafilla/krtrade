@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { TradeLog, formatCurrencyAmount } from '@/types';
-import { getStoredTrades } from '@/lib/storage';
+import { getStoredTrades, setStoredTrades } from '@/lib/storage';
 import EquityChart from '@/components/dashboard/EquityChart';
 import CreatorBadge from '@/components/common/CreatorBadge';
 import {
@@ -30,7 +30,23 @@ export default function DashboardPage() {
 
   useEffect(() => {
     setMounted(true);
-    setTrades(getStoredTrades());
+    async function loadTrades() {
+      if (user) {
+        try {
+          const res = await fetch('/api/trades');
+          if (res.ok) {
+            const { trades: neonTrades } = await res.json();
+            setTrades(neonTrades);
+            setStoredTrades(neonTrades);
+            return;
+          }
+        } catch {
+          // Network error — fallback to localStorage
+        }
+      }
+      setTrades(getStoredTrades());
+    }
+    loadTrades();
   }, [user]);
 
   // Compute Metrics
@@ -86,13 +102,13 @@ export default function DashboardPage() {
           </div>
 
           <h1 className="text-2xl sm:text-3xl font-extrabold text-[#1E2923] font-montserrat">
-            {t('greetingBanner')}
+            {t('welcome_msg')} {mounted ? (user?.fullName || 'Trader') : 'Trader'}!
           </h1>
 
           <p className="text-xs text-[#6B7C72] mt-1 font-medium">
             Trader Profile:{' '}
             <strong className="text-[#1E2923]">
-              {mounted ? (user?.fullName || 'Trader Pro') : 'Trader Pro'}
+              {mounted ? (user?.username ? `@${user.username}` : 'Trader Pro') : 'Trader Pro'}
             </strong>{' '}
             | Style:{' '}
             <span className="text-[#05C46B] font-extrabold">
@@ -106,7 +122,7 @@ export default function DashboardPage() {
           className="shrink-0 px-5 py-3 rounded-2xl bg-[#05C46B] hover:bg-[#04A75B] text-white font-extrabold text-sm shadow-md shadow-[#05C46B]/20 flex items-center justify-center space-x-2 transition-transform hover:scale-105"
         >
           <Plus className="w-4 h-4" />
-          <span>{t('addTradeBtn')}</span>
+          <span>{t('btn_log_trade')}</span>
         </Link>
       </div>
 
@@ -115,7 +131,7 @@ export default function DashboardPage() {
         {/* Total Account Balance */}
         <div className="tradewire-card p-4">
           <div className="flex items-center justify-between text-[#6B7C72] mb-2">
-            <span className="text-[10px] font-extrabold uppercase">Total Equity</span>
+            <span className="text-[10px] font-extrabold uppercase">{t('stat_total_equity')}</span>
             <div className="p-2 bg-[#E6F7F0] text-[#05C46B] rounded-xl">
               <Wallet className="w-4 h-4" />
             </div>
@@ -131,7 +147,7 @@ export default function DashboardPage() {
         {/* Total PnL */}
         <div className="tradewire-card p-4">
           <div className="flex items-center justify-between text-[#6B7C72] mb-2">
-            <span className="text-[10px] font-extrabold uppercase">{t('totalPnl')}</span>
+            <span className="text-[10px] font-extrabold uppercase">{t('stat_total_pnl')}</span>
             <div className="p-2 bg-[#E6F7F0] text-[#05C46B] rounded-xl">
               <TrendingUp className="w-4 h-4" />
             </div>
@@ -145,7 +161,7 @@ export default function DashboardPage() {
         {/* Win Rate */}
         <div className="tradewire-card p-4">
           <div className="flex items-center justify-between text-[#6B7C72] mb-2">
-            <span className="text-[10px] font-extrabold uppercase">{t('winRate')}</span>
+            <span className="text-[10px] font-extrabold uppercase">{t('stat_winrate')}</span>
             <div className="p-2 bg-[#E6F7F0] text-[#05C46B] rounded-xl">
               <Percent className="w-4 h-4" />
             </div>
@@ -161,7 +177,7 @@ export default function DashboardPage() {
         {/* Profit Factor */}
         <div className="tradewire-card p-4">
           <div className="flex items-center justify-between text-[#6B7C72] mb-2">
-            <span className="text-[10px] font-extrabold uppercase">{t('profitFactor')}</span>
+            <span className="text-[10px] font-extrabold uppercase">{t('stat_profit_factor')}</span>
             <div className="p-2 bg-[#E6F7F0] text-[#05C46B] rounded-xl">
               <Award className="w-4 h-4" />
             </div>
@@ -175,7 +191,7 @@ export default function DashboardPage() {
         {/* Win/Loss Streak */}
         <div className="tradewire-card p-4 col-span-2 lg:col-span-1">
           <div className="flex items-center justify-between text-[#6B7C72] mb-2">
-            <span className="text-[10px] font-extrabold uppercase">{t('streak')}</span>
+            <span className="text-[10px] font-extrabold uppercase">{t('stat_streak')}</span>
             <div className="p-2 bg-[#E6F7F0] text-[#05C46B] rounded-xl">
               <Flame className="w-4 h-4" />
             </div>
@@ -225,7 +241,7 @@ export default function DashboardPage() {
           <div className="text-center py-10 text-[#6B7C72]">
             <p className="text-sm font-bold">Belum ada transaksi trading dicatat.</p>
             <p className="text-xs mt-1">
-              Klik tombol <strong className="text-[#05C46B] font-extrabold">&ldquo;+ Catat Transaksi Baru&rdquo;</strong> di atas untuk mulai mencatat transaksi pertama Anda!
+              Klik tombol <strong className="text-[#05C46B] font-extrabold">&ldquo;{t('btn_log_trade')}&rdquo;</strong> di atas untuk mulai mencatat transaksi pertama Anda!
             </p>
           </div>
         ) : (

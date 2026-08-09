@@ -11,7 +11,7 @@ export default function Loading() {
         Memuat Halaman...
       </h3>
       <p className="text-xs text-[#6B7C72] mt-1 font-medium">
-        KRtrade Platform — Menyiapkan data trading Anda
+        KRTrade Platform — Menyiapkan data trading Anda
       </p>
     </div>
   );

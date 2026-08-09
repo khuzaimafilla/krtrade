@@ -1,12 +1,12 @@
 # 🐲 KRTRADE: PORTAL TRADING ORANG KAYA 9 NAGA (KRTRADE.md)
-> **KRtrade by Filla Calon Wong Sugih 9 Naga**  
+> **KRTrade by Filla Calon Wong Sugih 9 Naga**  
 > *Versi Aplikasi: BETA Version 0.0.0.1*  
 > *Dokumen Resmi Arsitektur Sistem, Fitur Aktif & Roadmap Pengembangan*
 
 ---
 
 ## 📌 Executive Summary
-**KRtrade** adalah aplikasi Web-Based Trading Journal & Community PWA (Progressive Web App) yang ultra-responsif, ringan, dan dirancang khusus untuk trader tingkat 9 Naga. Aplikasi ini memungkinkan pengguna mencatat log transaksi trading, menganalisis kurva pertumbuhan saldo (Equity Curve), bergabung dengan grup komunitas trading, serta bersaing pada papan peringkat (Leaderboard) global dan antar teman secara realtime.
+**KRTrade** adalah aplikasi Web-Based Trading Journal & Community PWA (Progressive Web App) yang ultra-responsif, ringan, dan dirancang khusus untuk trader tingkat 9 Naga. Aplikasi ini memungkinkan pengguna mencatat log transaksi trading, menganalisis kurva pertumbuhan saldo (Equity Curve), bergabung dengan grup komunitas trading, serta bersaing pada papan peringkat (Leaderboard) global dan antar teman secara realtime.
 
 ---
 
@@ -27,7 +27,7 @@
 | Nama Fitur | Deskripsi & Kemampuan Sistem | Status |
 | :--- | :--- | :---: |
 | **Language Selector Modal** | Modal popup pilihan bahasa utama (`Bahasa Indonesia` / `English`) saat pertama kali visit & switchable via Navbar / Settings. | ✅ **Active** |
-| **Welcome Onboarding (`/welcome`)** | Halaman pendaratan dengan header *"Selamat Datang di Aplikasi Pencatatan Orang Kaya!"*, Brand **KRtrade**, Subtitle Tag `BETA Version 0.0.0.1`, & inline Language controls. | ✅ **Active** |
+| **Welcome Onboarding (`/welcome`)** | Halaman pendaratan dengan header *"Selamat Datang di Aplikasi Pencatatan Orang Kaya!"*, Brand **KRTrade**, Subtitle Tag `BETA Version 0.0.0.1`, & inline Language controls. | ✅ **Active** |
 | **Direct Authentication (`/auth`)** | Form Login & Register dengan dukungan Username atau Email, Password Eye Toggle (`Eye`/`EyeOff`), & Styling Placeholder Profesional. | ✅ **Active** |
 | **Mandatory Trader Agreement** | Validasi wajib menyetujui *Janji Anti-Tamak* & *Pengakuan Filla Orang Paling Kaya di Dunia* sebelum tombol registrasi aktif. | ✅ **Active** |
 | **Protected Route Guard & Anti-Logout** | Memproteksi route terproteksi (`/dashboard`, `/journal`, `/community`, `/leaderboard`, `/settings`) dan mempertahankan sesi login saat browser di-refresh. | ✅ **Active** |
@@ -84,4 +84,4 @@ Berikut adalah daftar fitur lanjutan yang direncanakan untuk dirilis pada versi 
 5. **`group_members`**: Keanggotaan grup (`id`, `group_id`, `user_id`, `joined_at`).
 
 ---
-*Dokumen KRTRADE.md merupakan dokumentasi resmi sistem aplikasi KRtrade by Filla Calon Wong Sugih 9 Naga.*
+*Dokumen KRTRADE.md merupakan dokumentasi resmi sistem aplikasi KRTrade by Filla Calon Wong Sugih 9 Naga.*

@@ -4,7 +4,6 @@ import React, { useState, useEffect } from 'react';
 import { TradeLog } from '@/types';
 import { useLanguage } from '@/context/LanguageContext';
 import { X, Save, Upload, Loader } from 'lucide-react';
-import { convertFileToBase64 } from '@/lib/imageHelper';
 
 interface TradeModalProps {
   isOpen: boolean;
@@ -26,8 +25,13 @@ export default function TradeModal({
   const [entryPrice, setEntryPrice] = useState('');
   const [exitPrice, setExitPrice] = useState('');
   const [lotSize, setLotSize] = useState('1.0');
-  const [pnl, setPnl] = useState('');
-  const [rrRatio, setRrRatio] = useState('2.5');
+  
+  const [pnlResult, setPnlResult] = useState<'PROFIT' | 'LOSS' | 'BE'>('PROFIT');
+  const [pnlAmount, setPnlAmount] = useState('');
+  
+  const [riskInput, setRiskInput] = useState('1');
+  const [rewardInput, setRewardInput] = useState('2.5');
+  
   const [strategy, setStrategy] = useState('SMC Liquidity Grab');
   const [notes, setNotes] = useState('');
   const [screenshotUrl, setScreenshotUrl] = useState('');
@@ -40,8 +44,13 @@ export default function TradeModal({
       setEntryPrice(initialTrade.entryPrice.toString());
       setExitPrice(initialTrade.exitPrice.toString());
       setLotSize(initialTrade.lotSize.toString());
-      setPnl(initialTrade.pnl.toString());
-      setRrRatio(initialTrade.rrRatio.toString());
+      
+      setPnlResult(initialTrade.pnl > 0 ? 'PROFIT' : initialTrade.pnl < 0 ? 'LOSS' : 'BE');
+      setPnlAmount(Math.abs(initialTrade.pnl).toString());
+      
+      setRiskInput('1');
+      setRewardInput(initialTrade.rrRatio.toString());
+      
       setStrategy(initialTrade.strategy);
       setNotes(initialTrade.notes);
       setScreenshotUrl(initialTrade.screenshotUrl || '');
@@ -51,8 +60,10 @@ export default function TradeModal({
       setEntryPrice('');
       setExitPrice('');
       setLotSize('1.0');
-      setPnl('');
-      setRrRatio('2.5');
+      setPnlResult('PROFIT');
+      setPnlAmount('');
+      setRiskInput('1');
+      setRewardInput('2.5');
       setStrategy('SMC Liquidity Grab');
       setNotes('');
       setScreenshotUrl('');
@@ -67,6 +78,13 @@ export default function TradeModal({
     setIsLoading(true);
 
     try {
+      let finalPnl = parseFloat(pnlAmount) || 0;
+      if (pnlResult === 'LOSS') finalPnl = -1 * finalPnl;
+      else if (pnlResult === 'BE') finalPnl = 0;
+
+      let finalRr = parseFloat(rewardInput) / parseFloat(riskInput);
+      if (isNaN(finalRr) || !isFinite(finalRr)) finalRr = 1.0;
+
       await onSave({
         id: initialTrade?.id,
         pair,
@@ -74,11 +92,11 @@ export default function TradeModal({
         entryPrice: parseFloat(entryPrice) || 0,
         exitPrice: parseFloat(exitPrice) || 0,
         lotSize: parseFloat(lotSize) || 0.1,
-        pnl: parseFloat(pnl) || 0,
-        rrRatio: parseFloat(rrRatio) || 1.0,
+        pnl: finalPnl,
+        rrRatio: parseFloat(finalRr.toFixed(1)),
         strategy,
         notes,
-        screenshotUrl: screenshotUrl || 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=800&auto=format&fit=crop&q=80',
+        screenshotUrl: screenshotUrl || '',
         date: initialTrade?.date || new Date().toISOString(),
       });
       onClose();
@@ -92,7 +110,7 @@ export default function TradeModal({
       <div className="relative w-full max-w-xl max-h-[90vh] overflow-y-auto bg-white border border-[#E4E9E6] rounded-3xl shadow-2xl p-6 sm:p-8 my-auto">
         <div className="flex items-center justify-between border-b border-[#E4E9E6] pb-4 mb-4">
           <h3 className="text-xl font-bold text-[#1E2923]">
-            {initialTrade ? 'Edit Jurnal Transaksi' : t('addTradeBtn')}
+            {initialTrade ? 'Edit Jurnal Transaksi' : t('modal_title_log')}
           </h3>
           <button
             onClick={onClose}
@@ -106,15 +124,24 @@ export default function TradeModal({
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-bold text-[#1E2923] uppercase mb-1">Pair / Aset</label>
+              <label className="block text-xs font-bold text-[#1E2923] uppercase mb-1">{t('field_pair')}</label>
               <input
                 type="text"
+                list="pairsList"
                 required
                 value={pair}
                 onChange={(e) => setPair(e.target.value)}
                 placeholder="XAU/USD, EUR/USD..."
                 className="w-full p-3 rounded-xl border border-[#E4E9E6] bg-[#F8FAF9] text-sm text-[#1E2923] font-semibold outline-none focus:border-[#05C46B] transition-colors"
               />
+              <datalist id="pairsList">
+                <option value="XAU/USD" />
+                <option value="EUR/USD" />
+                <option value="GBP/USD" />
+                <option value="USD/JPY" />
+                <option value="BTC/USD" />
+                <option value="ETH/USD" />
+              </datalist>
             </div>
             <div>
               <label className="block text-xs font-bold text-[#1E2923] uppercase mb-1">Posisi Trading</label>
@@ -172,63 +199,113 @@ export default function TradeModal({
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-bold text-[#1E2923] uppercase mb-1">Lot Size</label>
-              <input
-                type="number"
-                step="0.01"
-                required
-                value={lotSize}
-                onChange={(e) => setLotSize(e.target.value)}
-                placeholder="1.0"
-                className="w-full p-3 rounded-xl border border-[#E4E9E6] bg-[#F8FAF9] text-sm text-[#1E2923] font-semibold outline-none focus:border-[#05C46B] transition-colors"
-              />
+              <label className="block text-xs font-bold text-[#1E2923] uppercase mb-1">{t('field_outcome')}</label>
+              <div className="flex flex-col space-y-2">
+                <div className="flex bg-[#F8FAF9] p-1 rounded-xl border border-[#E4E9E6]">
+                  <button
+                    type="button"
+                    onClick={() => setPnlResult('PROFIT')}
+                    className={`flex-1 py-1.5 rounded-lg text-xs font-extrabold transition-all ${pnlResult === 'PROFIT' ? 'bg-[#10B981] text-white shadow-sm' : 'text-[#6B7C72]'}`}
+                  >
+                    🟢 Profit
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPnlResult('LOSS')}
+                    className={`flex-1 py-1.5 rounded-lg text-xs font-extrabold transition-all ${pnlResult === 'LOSS' ? 'bg-[#EF4444] text-white shadow-sm' : 'text-[#6B7C72]'}`}
+                  >
+                    🔴 Loss
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPnlResult('BE')}
+                    className={`flex-1 py-1.5 rounded-lg text-xs font-extrabold transition-all ${pnlResult === 'BE' ? 'bg-slate-300 text-slate-800 shadow-sm' : 'text-[#6B7C72]'}`}
+                  >
+                    ⚪ BE
+                  </button>
+                </div>
+                <input
+                  type="number"
+                  step="any"
+                  min="0"
+                  required={pnlResult !== 'BE'}
+                  disabled={pnlResult === 'BE'}
+                  value={pnlResult === 'BE' ? '0' : pnlAmount}
+                  onChange={(e) => setPnlAmount(e.target.value)}
+                  placeholder={t('field_amount')}
+                  className="w-full p-3 rounded-xl border border-[#E4E9E6] bg-[#F8FAF9] text-sm text-[#1E2923] font-semibold outline-none focus:border-[#05C46B] transition-colors disabled:opacity-50"
+                />
+              </div>
             </div>
-            <div>
-              <label className="block text-xs font-bold text-[#1E2923] uppercase mb-1">PnL Net</label>
-              <input
-                type="number"
-                step="any"
-                required
-                value={pnl}
-                onChange={(e) => setPnl(e.target.value)}
-                placeholder="+150 / -50"
-                className="w-full p-3 rounded-xl border border-[#E4E9E6] bg-[#F8FAF9] text-sm text-[#1E2923] font-semibold outline-none focus:border-[#05C46B] transition-colors"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-[#1E2923] uppercase mb-1">R:R Ratio</label>
-              <input
-                type="number"
-                step="0.1"
-                required
-                value={rrRatio}
-                onChange={(e) => setRrRatio(e.target.value)}
-                placeholder="2.5"
-                className="w-full p-3 rounded-xl border border-[#E4E9E6] bg-[#F8FAF9] text-sm text-[#1E2923] font-semibold outline-none focus:border-[#05C46B] transition-colors"
-              />
+
+            <div className="flex flex-col justify-between space-y-2">
+              <div>
+                <label className="block text-xs font-bold text-[#1E2923] uppercase mb-1">Lot Size</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  required
+                  value={lotSize}
+                  onChange={(e) => setLotSize(e.target.value)}
+                  placeholder="1.0"
+                  className="w-full p-3 rounded-xl border border-[#E4E9E6] bg-[#F8FAF9] text-sm text-[#1E2923] font-semibold outline-none focus:border-[#05C46B] transition-colors"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-[#1E2923] uppercase mb-1">Risk : Reward Ratio</label>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="number"
+                    step="0.1"
+                    min="0.1"
+                    required
+                    value={riskInput}
+                    onChange={(e) => setRiskInput(e.target.value)}
+                    placeholder="Risk"
+                    className="w-16 p-3 rounded-xl border border-[#E4E9E6] bg-[#F8FAF9] text-sm text-center text-[#1E2923] font-semibold outline-none focus:border-[#05C46B] transition-colors"
+                  />
+                  <span className="font-extrabold text-[#6B7C72]">:</span>
+                  <input
+                    type="number"
+                    step="0.1"
+                    min="0.1"
+                    required
+                    value={rewardInput}
+                    onChange={(e) => setRewardInput(e.target.value)}
+                    placeholder="Reward"
+                    className="flex-1 p-3 rounded-xl border border-[#E4E9E6] bg-[#F8FAF9] text-sm text-center text-[#1E2923] font-semibold outline-none focus:border-[#05C46B] transition-colors"
+                  />
+                </div>
+              </div>
             </div>
           </div>
 
           <div>
             <label className="block text-xs font-bold text-[#1E2923] uppercase mb-1">Strategi / Setup</label>
-            <select
+            <input
+              type="text"
+              list="strategiesList"
+              required
               value={strategy}
               onChange={(e) => setStrategy(e.target.value)}
-              className="w-full p-3 rounded-xl border border-[#E4E9E6] bg-[#F8FAF9] text-sm text-[#1E2923] font-semibold outline-none focus:border-[#05C46B] transition-colors cursor-pointer"
-            >
-              <option value="SMC Liquidity Grab">SMC Liquidity Grab</option>
-              <option value="Breakout Retest">Breakout Retest</option>
-              <option value="Supply & Demand Zone">Supply & Demand Zone</option>
-              <option value="Trendline Bounce">Trendline Bounce</option>
-              <option value="Filla 9 Naga Scalp">Filla 9 Naga Scalp</option>
-              <option value="Order Block Entry">Order Block Entry</option>
-            </select>
+              placeholder="Pilih atau ketik strategi..."
+              className="w-full p-3 rounded-xl border border-[#E4E9E6] bg-[#F8FAF9] text-sm text-[#1E2923] font-semibold outline-none focus:border-[#05C46B] transition-colors"
+            />
+            <datalist id="strategiesList">
+              <option value="SMC Liquidity Grab" />
+              <option value="Order Block / FVG" />
+              <option value="Breakout & Retest" />
+              <option value="Supply & Demand" />
+              <option value="Trendline Break" />
+            </datalist>
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-[#1E2923] uppercase mb-1">Catatan Transaksi</label>
+            <label className="block text-xs font-bold text-[#1E2923] uppercase mb-1 flex items-center justify-between">
+              <span>{t('field_notes')}</span>
+            </label>
             <textarea
               rows={2}
               value={notes}
@@ -239,58 +316,27 @@ export default function TradeModal({
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-[#1E2923] uppercase mb-1">
-              Upload Screenshot Chart Proof (File / Kamera)
+            <label className="block text-xs font-bold text-[#1E2923] uppercase mb-1 flex items-center justify-between">
+              <span>{t('field_chart_url')}</span>
             </label>
-            {screenshotUrl ? (
-              <div className="relative rounded-2xl overflow-hidden border border-[#E4E9E6] bg-[#F8FAF9] group">
+            <input
+              type="url"
+              value={screenshotUrl}
+              onChange={(e) => setScreenshotUrl(e.target.value)}
+              placeholder="https://www.tradingview.com/x/..."
+              className="w-full p-3.5 rounded-xl border border-[#E4E9E6] bg-[#F8FAF9] text-sm text-[#1E2923] font-extrabold outline-none focus:border-[#05C46B] transition-colors"
+            />
+            {screenshotUrl && (
+              <div className="mt-3 relative rounded-xl overflow-hidden border border-[#E4E9E6] bg-slate-100 h-32">
                 <img
                   src={screenshotUrl}
-                  alt="Chart Proof Preview"
-                  className="w-full h-40 object-cover"
-                />
-                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center space-x-3 transition-opacity">
-                  <label className="px-3 py-1.5 rounded-xl bg-white text-[#1E2923] text-xs font-extrabold cursor-pointer hover:bg-[#E4E9E6] transition-colors btn-touch-target flex items-center justify-center">
-                    <span>Ganti Foto</span>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={async (e) => {
-                        const file = e.target.files?.[0];
-                        if (file) {
-                          const base64 = await convertFileToBase64(file);
-                          setScreenshotUrl(base64);
-                        }
-                      }}
-                    />
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => setScreenshotUrl('')}
-                    className="px-3 py-1.5 rounded-xl bg-[#FF4D4D] text-white text-xs font-extrabold hover:bg-[#E63939] transition-colors btn-touch-target flex items-center justify-center"
-                  >
-                    Hapus
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <label className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-[#05C46B]/40 hover:border-[#05C46B] bg-[#E6F7F0]/30 hover:bg-[#E6F7F0]/60 rounded-2xl cursor-pointer transition-all text-center">
-                <Upload className="w-8 h-8 text-[#05C46B] mb-2" />
-                <span className="text-xs font-extrabold text-[#1E2923]">Pilih Screenshot Chart</span>
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={async (e) => {
-                    const file = e.target.files?.[0];
-                    if (file) {
-                      const base64 = await convertFileToBase64(file);
-                      setScreenshotUrl(base64);
-                    }
+                  alt="Chart Preview"
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = 'https://placehold.co/600x400/F8FAF9/6B7C72?text=Invalid+Image+URL';
                   }}
                 />
-              </label>
+              </div>
             )}
           </div>
 

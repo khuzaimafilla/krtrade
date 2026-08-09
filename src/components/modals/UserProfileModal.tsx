@@ -155,7 +155,7 @@ export default function UserProfileModal({
           </span>
 
           <p className="text-xs text-[#6B7C72] mt-3 max-w-xs leading-relaxed italic">
-            &quot;{user.bio || 'Trader aktif KRtrade Platform.'}&quot;
+            &quot;{user.bio || 'Trader aktif KRTrade Platform.'}&quot;
           </p>
         </div>
 

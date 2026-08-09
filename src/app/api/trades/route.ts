@@ -16,7 +16,7 @@ export async function GET() {
     orderBy: { createdAt: 'desc' },
   });
 
-  // Map Prisma Trade → KRtrade TradeLog interface
+  // Map Prisma Trade → KRTrade TradeLog interface
   const mapped = trades.map((t) => ({
     id: t.id,
     pair: t.pair,

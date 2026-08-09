@@ -17,7 +17,7 @@ export default function AppLogo({ className = '', size = 40, showText = true }: 
       {!imgError ? (
         <img
           src="/logo.png"
-          alt="KRtrade Logo"
+          alt="KRTrade Logo"
           width={size}
           height={size}
           onError={() => setImgError(true)}
@@ -36,7 +36,7 @@ export default function AppLogo({ className = '', size = 40, showText = true }: 
         <div className="text-left">
           <div className="flex items-center space-x-1.5">
             <span className="font-extrabold text-xl tracking-tight text-[#1E2923] font-montserrat">
-              KRtrade
+              KRTrade
             </span>
           </div>
           <p className="text-[10px] font-semibold text-[#6B7C72] font-poppins">

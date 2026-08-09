@@ -154,7 +154,7 @@ export default function AddFriendModal({ isOpen, onClose, onFriendAdded }: AddFr
       fullName: targetUser.full_name || targetUser.username,
       avatarUrl: targetUser.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${targetUser.username}`,
       tradingStyle: targetUser.trading_style || 'Scalping',
-      bio: targetUser.bio || 'Trader aktif KRtrade Platform.',
+      bio: targetUser.bio || 'Trader aktif KRTrade Platform.',
       winRate,
       totalPnl,
       totalTrades,

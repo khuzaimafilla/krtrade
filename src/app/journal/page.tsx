@@ -367,7 +367,9 @@ export default function JournalPage() {
                           <ExternalLink className="w-3 h-3 ml-0.5" />
                         </a>
                       ) : (
-                        <span className="text-[10px] text-[#6B7C72]">-</span>
+                        <span className="inline-flex items-center px-2 py-1 rounded-md bg-slate-100 border border-slate-200 text-[10px] font-bold text-slate-400">
+                          [ 🔗 No Chart URL ]
+                        </span>
                       )}
                     </td>
 

@@ -3,7 +3,7 @@ import { TradeLog, UserProfile, TradingGroup } from '@/types';
 export interface KRBackupData {
   version: string;
   exportedAt: string;
-  platform: 'KRtrade';
+  platform: 'KRTrade';
   profile?: Partial<UserProfile>;
   trades: TradeLog[];
   groups?: TradingGroup[];
@@ -22,7 +22,7 @@ export function exportBackup(
   const backup: KRBackupData = {
     version: BACKUP_VERSION,
     exportedAt: new Date().toISOString(),
-    platform: 'KRtrade',
+    platform: 'KRTrade',
     profile,
     trades,
     groups,
@@ -49,7 +49,7 @@ export function exportBackup(
 
 /**
  * Parse and validate a backup JSON file, returning the backup data
- * Throws an error if the file is invalid or not a KRtrade backup
+ * Throws an error if the file is invalid or not a KRTrade backup
  */
 export function parseBackupFile(file: File): Promise<KRBackupData> {
   return new Promise((resolve, reject) => {
@@ -61,8 +61,8 @@ export function parseBackupFile(file: File): Promise<KRBackupData> {
         const parsed: KRBackupData = JSON.parse(raw);
 
         // Basic validation
-        if (parsed.platform !== 'KRtrade') {
-          reject(new Error('File ini bukan file backup KRtrade yang valid.'));
+        if (parsed.platform !== 'KRTrade') {
+          reject(new Error('File ini bukan file backup KRTrade yang valid.'));
           return;
         }
         if (!Array.isArray(parsed.trades)) {

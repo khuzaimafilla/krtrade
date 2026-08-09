@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 :root {
-  --bg-primary: #F8FAF9;
+  --bg-primary: #F8FAFC;
   --card-bg: #FFFFFF;
   --card-border: #E4E9E6;
   --profit-emerald: #05C46B;
@@ -17,7 +17,7 @@
   --font-montserrat: var(--font-montserrat), 'Montserrat', sans-serif;
   --font-poppins: var(--font-poppins), 'Poppins', sans-serif;
 
-  --color-primary-bg: #F8FAF9;
+  --color-primary-bg: #F8FAFC;
   --color-card-bg: #FFFFFF;
   --color-card-border: #E4E9E6;
   --color-profit: #05C46B;
@@ -27,6 +27,10 @@
   --color-slate-muted: #6B7C72;
   --color-loss: #FF4D4D;
   --color-gold: #D4AF37;
+}
+
+html, body {
+  overflow-x: hidden;
 }
 
 body {
@@ -100,14 +104,16 @@ a:not(:disabled):active,
 }
 
 .tradewire-card {
-  background-color: var(--card-bg);
-  border: 1px solid var(--card-border);
-  border-radius: 1rem;
-  box-shadow: 0 4px 20px -2px rgba(30, 41, 35, 0.04);
+  background-color: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(226, 232, 240, 0.7);
+  border-radius: 1.5rem;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   transition: all 0.2s ease-in-out;
 }
 
 .tradewire-card:hover {
-  border-color: #D0D9D4;
-  box-shadow: 0 8px 25px -4px rgba(30, 41, 35, 0.08);
+  border-color: rgba(203, 213, 225, 0.8);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
 }

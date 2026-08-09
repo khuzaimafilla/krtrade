@@ -21,7 +21,7 @@ export default function LanguageSelectorModal() {
               {t('selectLanguageTitle')}
             </h3>
             <p className="text-xs text-[#6B7C72]">
-              KRtrade Multi-Language Engine
+              KRTrade Multi-Language Engine
             </p>
           </div>
         </div>

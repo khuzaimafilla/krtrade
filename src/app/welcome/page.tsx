@@ -36,7 +36,7 @@ export default function WelcomePage() {
         {/* Bold App Name */}
         <div className="my-2">
           <span className="text-4xl sm:text-5xl font-black tracking-tight text-[#05C46B] drop-shadow-sm font-montserrat">
-            KRtrade
+            KRTrade
           </span>
         </div>
 

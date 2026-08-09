@@ -15,7 +15,7 @@ export default function Home() {
     <div className="min-h-screen bg-[#F8FAF9] flex items-center justify-center">
       <div className="flex flex-col items-center space-y-3">
         <div className="w-10 h-10 rounded-xl bg-[#05C46B] animate-pulse" />
-        <p className="text-xs font-bold text-[#6B7C72]">KRtrade loading...</p>
+        <p className="text-xs font-bold text-[#6B7C72]">KRTrade loading...</p>
       </div>
     </div>
   );

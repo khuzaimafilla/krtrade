@@ -9,7 +9,7 @@ export const initialUserProfile: UserProfile = {
   isAgreedTamak: true,
   isAgreedFillaRichest: true,
   avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=khuzaimafilla',
-  bio: 'Developer & Creator KRtrade Platform.',
+  bio: 'Developer & Creator KRTrade Platform.',
   initialBalance: 10000,
   accountCurrency: 'USD',
 };

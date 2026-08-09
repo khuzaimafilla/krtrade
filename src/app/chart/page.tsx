@@ -1,97 +1,43 @@
 'use client';
 
-import React, { useState } from 'react';
-import dynamic from 'next/dynamic';
-import { BarChart2, Info } from 'lucide-react';
-
-// Dynamic import to avoid SSR issues with lightweight-charts
-const KRChart = dynamic(() => import('@/components/chart/KRChart'), {
-  ssr: false,
-  loading: () => (
-    <div className="flex items-center justify-center bg-[#0F172A] rounded-2xl border border-[#1E293B]" style={{ minHeight: '420px' }}>
-      <div className="text-center text-slate-400">
-        <BarChart2 className="w-8 h-8 mx-auto mb-2 animate-pulse text-[#05C46B]" />
-        <p className="text-xs font-bold">Memuat Chart Engine...</p>
-      </div>
-    </div>
-  ),
-});
+import React from 'react';
+import { useLanguage } from '@/context/LanguageContext';
+import { BarChart2, Hammer } from 'lucide-react';
+import Link from 'next/link';
 
 export default function ChartPage() {
-  const [pair, setPair] = useState('XAU/USD');
-  const [entry, setEntry] = useState('');
-  const [sl, setSl] = useState('');
-  const [tp, setTp] = useState('');
-  const [applied, setApplied] = useState({ entry: 0, sl: 0, tp: 0 });
-  const [showInfo, setShowInfo] = useState(false);
-
-  const handleApply = () => {
-    const e = parseFloat(entry);
-    const s = parseFloat(sl);
-    const t = parseFloat(tp);
-    if (!isNaN(e) && !isNaN(s) && !isNaN(t)) {
-      setApplied({ entry: e, sl: s, tp: t });
-    }
-  };
+  const { t } = useLanguage();
 
   return (
-    <div className="space-y-5 pb-16 md:pb-8 animate-fade-in font-poppins">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <div className="flex items-center space-x-2">
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-[#1E2923] font-montserrat">
-              Chart Analysis
-            </h1>
-            <BarChart2 className="w-6 h-6 text-[#05C46B]" />
+    <div className="space-y-6 pb-16 md:pb-8 animate-fade-in font-poppins min-h-[70vh] flex flex-col justify-center items-center">
+      <div className="text-center space-y-6 max-w-lg mx-auto bg-white p-10 rounded-[2rem] border border-[#E4E9E6] shadow-xl shadow-[#05C46B]/5 relative overflow-hidden">
+        
+        {/* Background glow */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-32 bg-[#05C46B]/10 blur-[50px] rounded-full pointer-events-none" />
+
+        <div className="flex justify-center">
+          <div className="w-20 h-20 bg-[#E6F7F0] rounded-3xl flex items-center justify-center border-4 border-white shadow-sm relative">
+            <BarChart2 className="w-10 h-10 text-[#05C46B]" />
+            <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-[#1E2923] rounded-full flex items-center justify-center border-2 border-white shadow-sm animate-bounce">
+              <Hammer className="w-4 h-4 text-white" />
+            </div>
           </div>
-          <p className="text-xs text-[#6B7C72] mt-1 font-medium">
-            Analisis chart interaktif dengan R:R Risk Management Tool
+        </div>
+
+        <div>
+          <h1 className="text-2xl font-extrabold text-[#1E2923] font-montserrat mb-2">
+            Fitur Chart Sedang Dibangun!
+          </h1>
+          <p className="text-sm font-medium text-[#6B7C72] leading-relaxed">
+            Sistem Chart Analysis interaktif sedang dalam tahap pengembangan dan penyempurnaan UI/UX. Akan segera hadir!
           </p>
         </div>
-        <button
-          onClick={() => setShowInfo(!showInfo)}
-          className="p-2.5 rounded-xl border border-[#E4E9E6] text-[#6B7C72] hover:text-[#05C46B] hover:border-[#05C46B]/40 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
-        >
-          <Info className="w-5 h-5" />
-        </button>
-      </div>
 
-      {showInfo && (
-        <div className="tradewire-card p-4 bg-[#E6F7F0]/60 border-[#05C46B]/30 animate-fade-in">
-          <p className="text-xs font-bold text-[#1E2923] mb-2">📖 Cara Menggunakan Chart R:R Tool</p>
-          <ul className="text-xs text-[#6B7C72] space-y-1 font-medium">
-            <li>1. Pilih pair dan timeframe yang diinginkan dari toolbar chart</li>
-            <li>2. Klik tombol <span className="font-bold text-[#05C46B]">R:R Tool</span> untuk membuka panel entry/SL/TP</li>
-            <li>3. Masukkan harga Entry, Stop Loss, dan Take Profit Anda</li>
-            <li>4. Klik <span className="font-bold text-[#05C46B]">Apply</span> — garis R:R akan langsung tampil di chart</li>
-            <li>5. Data chart merupakan simulasi realistis untuk latihan analisis</li>
-          </ul>
+        <div className="pt-4 flex justify-center">
+          <Link href="/dashboard" className="px-6 py-3 rounded-2xl bg-[#05C46B] hover:bg-[#04A75B] text-white font-extrabold text-xs shadow-lg shadow-[#05C46B]/20 transition-transform hover:scale-105 flex items-center space-x-2">
+            <span>Kembali ke Dasbor</span>
+          </Link>
         </div>
-      )}
-
-      {/* Chart */}
-      <div className="h-[480px] sm:h-[520px]">
-        <KRChart
-          pair={pair}
-          entryPrice={applied.entry || undefined}
-          slPrice={applied.sl || undefined}
-          tpPrice={applied.tp || undefined}
-          className="h-full"
-        />
-      </div>
-
-      {/* Quick Notes */}
-      <div className="tradewire-card p-4">
-        <p className="text-xs font-extrabold text-[#1E2923] mb-3">📝 Catatan Analisis Cepat</p>
-        <textarea
-          rows={3}
-          placeholder="Tulis bias, level key, konfirmasi setup, dan rencana entry Anda di sini..."
-          className="w-full p-3 rounded-xl border border-[#E4E9E6] bg-[#F8FAF9] text-xs text-[#1E2923] outline-none focus:border-[#05C46B] transition-colors resize-none font-medium"
-        />
-        <p className="text-[10px] text-[#6B7C72] mt-2 font-medium">
-          Catatan ini hanya tersimpan sementara di sesi ini. Gunakan Jurnal untuk menyimpan secara permanen.
-        </p>
       </div>
     </div>
   );

@@ -65,7 +65,7 @@ export default function SplashScreen() {
 
           <div className="flex items-center justify-between text-[11px] font-bold text-[#6B7C72]">
             <span className="font-montserrat uppercase tracking-wider text-[#05C46B]">
-              Memuat KRtrade Platform...
+              Memuat KRTrade Platform...
             </span>
             <span className="font-mono text-[#1E2923] font-extrabold">{progress}%</span>
           </div>
