@@ -5,7 +5,9 @@ import { TradingGroup, GroupMemberDetail } from '@/types';
 import { useLanguage } from '@/context/LanguageContext';
 import { useAuth } from '@/context/AuthContext';
 import { getStoredGroups, setStoredGroups } from '@/lib/storage';
-import { supabase, isSupabaseConfigured } from '@/lib/supabaseClient';
+// Supabase removed — community features use localStorage
+const supabase = null as any;
+const isSupabaseConfigured = false;
 import CreatorBadge from '@/components/common/CreatorBadge';
 import {
   Users,

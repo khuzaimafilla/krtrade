@@ -5,8 +5,10 @@ import { TradeLog, formatCurrencyAmount } from '@/types';
 import { useLanguage } from '@/context/LanguageContext';
 import { useAuth } from '@/context/AuthContext';
 import { getStoredTrades, setStoredTrades } from '@/lib/storage';
-import { supabase, isSupabaseConfigured } from '@/lib/supabaseClient';
 import TradeModal from '@/components/modals/TradeModal';
+import BackupRestoreModal from '@/components/modals/BackupRestoreModal';
+import TradeCardExport from '@/components/journal/TradeCardExport';
+import { KRBackupData } from '@/lib/utils/backup';
 import {
   Plus,
   Search,
@@ -17,6 +19,8 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   ImageIcon,
+  HardDrive,
+  Share2,
 } from 'lucide-react';
 
 export default function JournalPage() {
@@ -35,32 +39,31 @@ export default function JournalPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTrade, setEditingTrade] = useState<TradeLog | null>(null);
 
+  // Backup/Restore modal
+  const [isBackupOpen, setIsBackupOpen] = useState(false);
+
+  // Victory Card
+  const [shareCardTrade, setShareCardTrade] = useState<TradeLog | null>(null);
+
+  const handleRestoreComplete = (backup: KRBackupData) => {
+    const restored = backup.trades;
+    setTrades(restored);
+    setStoredTrades(restored);
+  };
+
   useEffect(() => {
     async function loadTrades() {
-      if (isSupabaseConfigured && user) {
-        const { data, error } = await supabase
-          .from('trades')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false });
-
-        if (!error && data) {
-          const mapped: TradeLog[] = data.map((t: any) => ({
-            id: t.id,
-            pair: t.pair,
-            type: t.type,
-            entryPrice: Number(t.entry_price),
-            exitPrice: Number(t.exit_price),
-            lotSize: Number(t.lot_size),
-            pnl: Number(t.pnl),
-            rrRatio: Number(t.rrr),
-            strategy: t.strategy_tag,
-            notes: t.notes || '',
-            screenshotUrl: t.chart_url,
-            date: t.created_at,
-          }));
-          setTrades(mapped);
-          return;
+      if (user) {
+        try {
+          const res = await fetch('/api/trades');
+          if (res.ok) {
+            const { trades: neonTrades } = await res.json();
+            setTrades(neonTrades);
+            setStoredTrades(neonTrades); // cache locally
+            return;
+          }
+        } catch {
+          // Network error — fallback to localStorage
         }
       }
       setTrades(getStoredTrades());
@@ -74,54 +77,57 @@ export default function JournalPage() {
   };
 
   const handleAddOrUpdate = async (tradeData: Omit<TradeLog, 'id'> & { id?: string }) => {
-    if (isSupabaseConfigured && user) {
+    if (user) {
       if (tradeData.id) {
-        await supabase.from('trades').update({
-          pair: tradeData.pair,
-          type: tradeData.type,
-          entry_price: tradeData.entryPrice,
-          exit_price: tradeData.exitPrice,
-          lot_size: tradeData.lotSize,
-          pnl: tradeData.pnl,
-          rrr: tradeData.rrRatio,
-          strategy_tag: tradeData.strategy,
-          notes: tradeData.notes,
-          chart_url: tradeData.screenshotUrl,
-        }).eq('id', tradeData.id);
+        // Update existing
+        try {
+          const res = await fetch(`/api/trades/${tradeData.id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(tradeData),
+          });
+          if (res.ok) {
+            const { trade: updated } = await res.json();
+            const newList = trades.map((t) => t.id === updated.id ? updated : t);
+            setTrades(newList);
+            setStoredTrades(newList);
+            return;
+          }
+        } catch { /* fallback */ }
       } else {
-        await supabase.from('trades').insert({
-          user_id: user.id,
-          pair: tradeData.pair,
-          type: tradeData.type,
-          entry_price: tradeData.entryPrice,
-          exit_price: tradeData.exitPrice,
-          lot_size: tradeData.lotSize,
-          pnl: tradeData.pnl,
-          rrr: tradeData.rrRatio,
-          strategy_tag: tradeData.strategy,
-          notes: tradeData.notes,
-          chart_url: tradeData.screenshotUrl,
-        });
+        // Create new
+        try {
+          const res = await fetch('/api/trades', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(tradeData),
+          });
+          if (res.ok) {
+            const { trade: created } = await res.json();
+            const newList = [created, ...trades];
+            setTrades(newList);
+            setStoredTrades(newList);
+            return;
+          }
+        } catch { /* fallback */ }
       }
     }
 
+    // localStorage fallback
     if (tradeData.id) {
       const updated = trades.map((t) => (t.id === tradeData.id ? (tradeData as TradeLog) : t));
       saveTradesToStorage(updated);
     } else {
-      const newTrade: TradeLog = {
-        ...(tradeData as TradeLog),
-        id: 'trd_' + Date.now(),
-      };
+      const newTrade: TradeLog = { ...(tradeData as TradeLog), id: 'trd_' + Date.now() };
       saveTradesToStorage([newTrade, ...trades]);
     }
   };
 
   const handleDelete = async (id: string) => {
     if (confirm('Apakah Anda yakin ingin menghapus transaksi ini dari jurnal?')) {
-      if (isSupabaseConfigured) {
-        await supabase.from('trades').delete().eq('id', id);
-      }
+      try {
+        await fetch(`/api/trades/${id}`, { method: 'DELETE' });
+      } catch { /* fallback */ }
       const updated = trades.filter((t) => t.id !== id);
       saveTradesToStorage(updated);
     }
@@ -175,16 +181,25 @@ export default function JournalPage() {
           </p>
         </div>
 
-        <button
-          onClick={() => {
-            setEditingTrade(null);
-            setIsModalOpen(true);
-          }}
-          className="px-5 py-3 rounded-2xl bg-[#05C46B] hover:bg-[#04A75B] text-white font-bold text-sm shadow-md shadow-[#05C46B]/20 flex items-center justify-center space-x-2 transition-transform hover:scale-105"
-        >
-          <Plus className="w-4 h-4" />
-          <span>{t('addTradeBtn')}</span>
-        </button>
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={() => setIsBackupOpen(true)}
+            className="px-4 py-3 rounded-2xl bg-[#F8FAF9] border border-[#E4E9E6] hover:border-[#05C46B]/40 text-[#6B7C72] hover:text-[#05C46B] text-sm font-bold flex items-center justify-center space-x-2 transition-colors min-h-[44px]"
+          >
+            <HardDrive className="w-4 h-4" />
+            <span className="hidden sm:inline">Backup</span>
+          </button>
+          <button
+            onClick={() => {
+              setEditingTrade(null);
+              setIsModalOpen(true);
+            }}
+            className="px-5 py-3 rounded-2xl bg-[#05C46B] hover:bg-[#04A75B] text-white font-bold text-sm shadow-md shadow-[#05C46B]/20 flex items-center justify-center space-x-2 transition-transform hover:scale-105 min-h-[44px]"
+          >
+            <Plus className="w-4 h-4" />
+            <span>{t('addTradeBtn')}</span>
+          </button>
+        </div>
       </div>
 
       {/* Filter & Search Bar */}
@@ -373,23 +388,30 @@ export default function JournalPage() {
                     </td>
 
                     {/* Actions */}
-                    <td className="py-3.5 px-4 text-right space-x-1">
-                      <button
-                        onClick={() => {
-                          setEditingTrade(trd);
-                          setIsModalOpen(true);
-                        }}
-                        className="p-1.5 text-[#6B7C72] hover:text-[#05C46B] hover:bg-[#E6F7F0] rounded-lg transition-colors"
-                      >
-                        <Edit2 className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(trd.id)}
-                        className="p-1.5 text-[#6B7C72] hover:text-[#FF4D4D] hover:bg-[#FF4D4D]/10 rounded-lg transition-colors"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </td>
+                     <td className="py-3.5 px-4 text-right space-x-1">
+                       <button
+                         onClick={() => setShareCardTrade(trd)}
+                         title="Bagikan Victory Card"
+                         className="p-1.5 text-[#6B7C72] hover:text-[#D4AF37] hover:bg-[#D4AF37]/10 rounded-lg transition-colors"
+                       >
+                         <Share2 className="w-4 h-4" />
+                       </button>
+                       <button
+                         onClick={() => {
+                           setEditingTrade(trd);
+                           setIsModalOpen(true);
+                         }}
+                         className="p-1.5 text-[#6B7C72] hover:text-[#05C46B] hover:bg-[#E6F7F0] rounded-lg transition-colors"
+                       >
+                         <Edit2 className="w-4 h-4" />
+                       </button>
+                       <button
+                         onClick={() => handleDelete(trd.id)}
+                         className="p-1.5 text-[#6B7C72] hover:text-[#FF4D4D] hover:bg-[#FF4D4D]/10 rounded-lg transition-colors"
+                       >
+                         <Trash2 className="w-4 h-4" />
+                       </button>
+                     </td>
                   </tr>
                 ))
               )}
@@ -405,6 +427,26 @@ export default function JournalPage() {
         onSave={handleAddOrUpdate}
         initialTrade={editingTrade}
       />
+
+      {/* Backup / Restore Modal */}
+      <BackupRestoreModal
+        isOpen={isBackupOpen}
+        onClose={() => setIsBackupOpen(false)}
+        trades={trades}
+        profile={user || undefined}
+        onRestoreComplete={handleRestoreComplete}
+      />
+
+      {/* Victory Card / Share Modal */}
+      {shareCardTrade && (
+        <TradeCardExport
+          isOpen={!!shareCardTrade}
+          onClose={() => setShareCardTrade(null)}
+          trade={shareCardTrade}
+          username={user?.username}
+          accountCurrency={user?.accountCurrency}
+        />
+      )}
     </div>
   );
 }

@@ -16,6 +16,7 @@ import {
   User,
   Globe,
   LogOut,
+  BarChart2,
 } from 'lucide-react';
 import LogoutConfirmModal from '@/components/modals/LogoutConfirmModal';
 
@@ -38,6 +39,7 @@ export default function Navbar() {
   const navItems = [
     { href: '/dashboard', label: t('dashboard'), icon: LayoutDashboard },
     { href: '/journal', label: t('journal'), icon: BookOpen },
+    { href: '/chart', label: 'Chart', icon: BarChart2 },
     { href: '/community', label: t('community'), icon: Users },
     { href: '/leaderboard', label: t('leaderboard'), icon: Trophy },
     { href: '/profile', label: 'Profil Saya', icon: User },
@@ -55,7 +57,7 @@ export default function Navbar() {
             </Link>
 
             {/* Compact Icon Navigation Bar */}
-            <nav className="hidden md:flex items-center space-x-1.5 bg-[#F8FAF9] p-1.5 rounded-2xl border border-[#E4E9E6]">
+            <nav className="hidden md:flex items-center space-x-2">
               {navItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = pathname === item.href;
@@ -64,13 +66,13 @@ export default function Navbar() {
                     key={item.href}
                     href={item.href}
                     title={item.label}
-                    className={`relative group flex items-center space-x-2 px-3 py-2 rounded-xl text-xs font-extrabold transition-all ${
+                    className={`relative group flex items-center space-x-2 px-6 py-2 rounded-xl text-xs font-extrabold transition-all duration-200 ${
                       isActive
-                        ? 'bg-white text-[#05C46B] shadow-sm border border-[#E4E9E6]'
-                        : 'text-[#6B7C72] hover:text-[#1E2923] hover:bg-white/60'
+                        ? 'text-[#10B981] bg-[#10B981]/10'
+                        : 'text-[#6B7C72] bg-transparent hover:text-[#1E2923] hover:bg-black/5'
                     }`}
                   >
-                    <Icon className={`w-4 h-4 transition-transform group-hover:scale-110 ${isActive ? 'text-[#05C46B]' : 'text-[#6B7C72]'}`} />
+                    <Icon className={`w-4 h-4 transition-transform group-hover:scale-110 ${isActive ? 'text-[#10B981]' : 'text-[#6B7C72]'}`} />
                     <span className="hidden xl:inline-block font-montserrat">{item.label}</span>
 
                     {/* Tooltip on hover for icon-only compact view */}
@@ -94,20 +96,20 @@ export default function Navbar() {
               </button>
 
               {mounted && isAuthenticated && user && (
-                <div className="hidden sm:flex items-center space-x-2 pl-2 border-l border-[#E4E9E6]">
+                <div className="hidden sm:flex items-center gap-x-4 pl-4 border-l border-[#E4E9E6]">
                   <Link
                     href="/profile"
                     title={`Profil: ${user.username}`}
-                    className="flex items-center space-x-2 group p-1 rounded-xl hover:bg-[#F8FAF9] transition-colors"
+                    className="flex items-center space-x-2 group p-1.5 rounded-xl hover:bg-[#F8FAF9] transition-colors"
                   >
                     <img
                       src={user.avatarUrl || 'https://api.dicebear.com/7.x/avataaars/svg?seed=Filla'}
                       alt={user.username}
-                      className="w-8 h-8 rounded-full border border-[#05C46B] bg-[#E6F7F0] object-cover group-hover:scale-105 transition-transform"
+                      className="w-8 h-8 rounded-full border border-[#10B981] bg-[#E6F7F0] object-cover group-hover:scale-105 transition-transform"
                     />
                     <div className="text-left hidden lg:block">
-                      <div className="flex items-center space-x-1">
-                        <p className="text-xs font-extrabold text-[#1E2923] truncate max-w-[100px]">
+                      <div className="flex items-center space-x-2">
+                        <p className="text-xs font-extrabold text-[#1E2923] truncate max-w-[120px]">
                           {user.username}
                         </p>
                         <CreatorBadge username={user.username} size="sm" />
@@ -118,9 +120,9 @@ export default function Navbar() {
                   <button
                     onClick={() => setIsLogoutModalOpen(true)}
                     title={t('logout')}
-                    className="p-1.5 text-[#6B7C72] hover:text-[#FF4D4D] hover:bg-[#FF4D4D]/10 rounded-xl transition-colors"
+                    className="p-2 text-[#6B7C72] hover:text-[#FF4D4D] hover:bg-[#FF4D4D]/10 rounded-xl transition-all duration-200"
                   >
-                    <LogOut className="w-4 h-4" />
+                    <LogOut className="w-5 h-5" />
                   </button>
                 </div>
               )}

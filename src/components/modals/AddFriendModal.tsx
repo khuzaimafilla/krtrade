@@ -2,7 +2,9 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase, isSupabaseConfigured } from '@/lib/supabaseClient';
+// Supabase removed — friend search uses localStorage
+const supabase = null as any;
+const isSupabaseConfigured = false;
 import CreatorBadge from '@/components/common/CreatorBadge';
 import UserProfileModal, { PublicUserProfile } from '@/components/modals/UserProfileModal';
 import { Search, UserPlus, X, ShieldCheck, UserCheck, Eye, Clock } from 'lucide-react';
@@ -41,7 +43,7 @@ export default function AddFriendModal({ isOpen, onClose, onFriendAdded }: AddFr
     const map: FriendshipStatusMap = {};
     userIds.forEach((uid) => { map[uid] = 'none'; });
 
-    data.forEach((f) => {
+    data.forEach((f: any) => {
       const otherId = f.requester_id === user.id ? f.addressee_id : f.requester_id;
       if (map[otherId] !== undefined || userIds.includes(otherId)) {
         map[otherId] = f.status as 'pending' | 'accepted';
@@ -190,7 +192,7 @@ export default function AddFriendModal({ isOpen, onClose, onFriendAdded }: AddFr
 
   return (
     <>
-      <div className="fixed inset-0 z-[150] overflow-y-auto bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4 sm:p-6 animate-fade-in font-poppins">
+      <div className="fixed inset-0 z-[150] bg-black/60 backdrop-blur-sm w-screen h-screen flex items-center justify-center overflow-y-auto p-4 sm:p-6 animate-fade-in font-poppins">
         <div className="relative w-full max-w-md max-h-[90vh] overflow-y-auto bg-white border border-[#E4E9E6] rounded-3xl shadow-2xl p-6 sm:p-8 my-auto text-left">
           {/* Header */}
           <div className="flex items-center justify-between border-b border-[#E4E9E6] pb-4 mb-4">

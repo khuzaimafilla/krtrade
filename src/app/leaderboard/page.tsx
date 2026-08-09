@@ -7,7 +7,9 @@ import { TradingStyle, LeaderboardEntry } from '@/types';
 import AddFriendModal from '@/components/modals/AddFriendModal';
 import UserProfileModal, { PublicUserProfile } from '@/components/modals/UserProfileModal';
 import CreatorBadge from '@/components/common/CreatorBadge';
-import { supabase, isSupabaseConfigured } from '@/lib/supabaseClient';
+// Supabase removed — leaderboard uses localStorage
+const supabase = null as any;
+const isSupabaseConfigured = false;
 import { Users, UserCheck, Crown, UserPlus, RefreshCw, Eye } from 'lucide-react';
 
 export default function LeaderboardPage() {

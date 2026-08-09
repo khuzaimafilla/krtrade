@@ -11,6 +11,7 @@ import {
   Trophy,
   User,
   Settings,
+  BarChart2,
 } from 'lucide-react';
 
 export default function BottomNav() {
@@ -24,6 +25,7 @@ export default function BottomNav() {
   const items = [
     { href: '/dashboard', label: t('dashboard'), icon: LayoutDashboard },
     { href: '/journal', label: t('journal'), icon: BookOpen },
+    { href: '/chart', label: 'Chart', icon: BarChart2 },
     { href: '/community', label: t('community'), icon: Users },
     { href: '/leaderboard', label: t('leaderboard'), icon: Trophy },
     { href: '/profile', label: 'Profil', icon: User },

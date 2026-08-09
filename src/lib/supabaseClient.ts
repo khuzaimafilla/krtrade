@@ -1,14 +1,13 @@
-import { createClient } from '@supabase/supabase-js';
+/**
+ * @deprecated Supabase has been replaced by Neon PostgreSQL via Prisma + NextAuth.
+ * This file is kept as a stub to prevent build errors during migration.
+ * All Supabase usages have been replaced with:
+ *   - Auth: NextAuth.js with Discord OAuth (src/auth.ts)
+ *   - Database: Prisma + Neon (src/lib/prisma.ts)
+ *   - API: Next.js Route Handlers (src/app/api/*)
+ */
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://afvhfvjyrfmsfvpnmtrd.supabase.co';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'sb_publishable_-740rnqaU7ebCWs8NGQvYA_QnRST06K';
+export const isSupabaseConfigured = false;
 
-export const isSupabaseConfigured =
-  Boolean(supabaseUrl) &&
-  Boolean(supabaseAnonKey) &&
-  !supabaseUrl.includes('your-supabase-project-id');
-
-export const supabase = createClient(
-  supabaseUrl || 'https://placeholder.supabase.co',
-  supabaseAnonKey || 'placeholder'
-);
+// Null stub — all calls to supabase will be no-ops
+export const supabase = null as any;

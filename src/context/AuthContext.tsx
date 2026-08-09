@@ -1,37 +1,27 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useEffect } from 'react';
+import { useSession, signIn, signOut } from 'next-auth/react';
 import { useRouter, usePathname } from 'next/navigation';
 import { UserProfile, TradingStyle, AccountCurrency } from '@/types';
-import { getStoredUserProfile, setStoredUserProfile } from '@/lib/storage';
-import { supabase, isSupabaseConfigured } from '@/lib/supabaseClient';
+import { setStoredUserProfile } from '@/lib/storage';
 
+// Keep the same AuthContextType interface so all consuming components work unchanged
 export interface AuthResult {
   success: boolean;
   message: string;
 }
 
-function getRegisteredUsers(): Array<{ email: string; username: string; password: string; profile: UserProfile }> {
-  if (typeof window === 'undefined') return [];
-  try {
-    const data = localStorage.getItem('krtrade_registered_users');
-    return data ? JSON.parse(data) : [];
-  } catch {
-    return [];
-  }
-}
-
-function saveRegisteredUser(entry: { email: string; username: string; password: string; profile: UserProfile }) {
-  if (typeof window === 'undefined') return;
-  const users = getRegisteredUsers();
-  users.push(entry);
-  localStorage.setItem('krtrade_registered_users', JSON.stringify(users));
-}
-
 interface AuthContextType {
   user: UserProfile | null;
   isAuthenticated: boolean;
+  isLoading: boolean;
+  // Legacy methods — redirected to Discord OAuth
   login: (emailOrUser: string, pass: string) => Promise<AuthResult>;
+  loginWithDiscord: () => Promise<void>;
+  logout: () => Promise<void>;
+  updateUser: (profilePartial: Partial<UserProfile>) => Promise<void>;
+  // No-op stubs kept for backward compatibility
   register: (data: {
     fullName: string;
     email: string;
@@ -43,348 +33,121 @@ interface AuthContextType {
   }) => Promise<AuthResult>;
   verifyOtp: (email: string, token: string) => Promise<boolean>;
   loginWithGoogle: () => Promise<void>;
-  logout: () => Promise<void>;
-  updateUser: (profilePartial: Partial<UserProfile>) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const PROTECTED_ROUTES = ['/dashboard', '/journal', '/community', '/leaderboard', '/settings'];
+const PROTECTED_ROUTES = ['/dashboard', '/journal', '/community', '/leaderboard', '/settings', '/profile', '/chart'];
+
+/**
+ * Map a NextAuth session user → KRtrade UserProfile interface
+ * This ensures all existing components work without modification.
+ */
+function sessionToProfile(sessionUser: NonNullable<ReturnType<typeof useSession>['data']>['user']): UserProfile {
+  return {
+    id: sessionUser.id ?? '',
+    fullName: sessionUser.name ?? 'KRtrade Trader',
+    email: sessionUser.email ?? '',
+    username: sessionUser.username ?? (sessionUser.email?.split('@')[0] ?? 'trader'),
+    tradingStyle: (sessionUser.tradingStyle as TradingStyle) ?? 'Scalping',
+    isAgreedTamak: true,
+    isAgreedFillaRichest: true,
+    avatarUrl: sessionUser.image ?? `https://api.dicebear.com/7.x/avataaars/svg?seed=${sessionUser.name}`,
+    bio: sessionUser.bio ?? 'Trader aktif KRtrade Platform.',
+    initialBalance: sessionUser.initialBalance ?? 10000,
+    accountCurrency: (sessionUser.accountCurrency as AccountCurrency) ?? 'USD',
+    createdAt: new Date().toISOString(),
+  };
+}
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const { data: session, status, update: updateSession } = useSession();
   const router = useRouter();
   const pathname = usePathname();
 
-  const [user, setUser] = useState<UserProfile | null>(() => {
-    if (typeof window !== 'undefined') {
-      const isAuth = localStorage.getItem('krtrade_is_authenticated');
-      if (isAuth === 'true') {
-        return getStoredUserProfile();
-      }
-    }
-    return null;
-  });
+  const isLoading = status === 'loading';
+  const isAuthenticated = status === 'authenticated' && Boolean(session?.user?.id);
+  const user = isAuthenticated && session?.user ? sessionToProfile(session.user) : null;
 
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('krtrade_is_authenticated') === 'true';
-    }
-    return false;
-  });
-
-  const [loading, setLoading] = useState<boolean>(true);
-
+  // Sync user profile to localStorage for offline access & backward compat
   useEffect(() => {
-    async function initAuth() {
-      if (isSupabaseConfigured) {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user) {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .single();
-
-          if (profile) {
-            const mappedUser: UserProfile = {
-              id: profile.id,
-              fullName: profile.full_name,
-              email: session.user.email || '',
-              username: profile.username,
-              tradingStyle: profile.trading_style as TradingStyle,
-              isAgreedTamak: profile.accepts_tamak_promise,
-              isAgreedFillaRichest: profile.acknowledges_filla_richest,
-              avatarUrl: profile.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.username}`,
-              bio: profile.bio || 'Trader aktif KRtrade Platform.',
-              initialBalance: profile.initial_balance ? Number(profile.initial_balance) : 10000,
-              accountCurrency: (profile.account_currency as AccountCurrency) || 'USD',
-            };
-            setUser(mappedUser);
-            setIsAuthenticated(true);
-            setStoredUserProfile(mappedUser);
-            localStorage.setItem('krtrade_is_authenticated', 'true');
-          }
-        }
-      } else {
-        const savedUser = getStoredUserProfile();
-        const isAuth = localStorage.getItem('krtrade_is_authenticated');
-        if (isAuth === 'true' && savedUser) {
-          setUser(savedUser);
-          setIsAuthenticated(true);
-        }
-      }
-      setLoading(false);
+    if (user) {
+      setStoredUserProfile(user);
+      localStorage.setItem('krtrade_is_authenticated', 'true');
+    } else if (!isLoading) {
+      localStorage.removeItem('krtrade_is_authenticated');
     }
+  }, [user, isLoading]);
 
-    initAuth();
-
-    if (isSupabaseConfigured) {
-      const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-        if (event === 'SIGNED_IN' && session?.user) {
-          setIsAuthenticated(true);
-          localStorage.setItem('krtrade_is_authenticated', 'true');
-        } else if (event === 'SIGNED_OUT') {
-          setUser(null);
-          setIsAuthenticated(false);
-          localStorage.removeItem('krtrade_is_authenticated');
-        }
-      });
-      return () => subscription.unsubscribe();
-    }
-  }, []);
-
-  // Protected Route Guard
+  // Route Guard
   useEffect(() => {
-    if (!loading) {
-      if (!isAuthenticated && PROTECTED_ROUTES.includes(pathname)) {
+    if (!isLoading) {
+      if (!isAuthenticated && PROTECTED_ROUTES.some(route => pathname.startsWith(route))) {
         router.push('/auth');
       }
-    }
-  }, [isAuthenticated, pathname, loading, router]);
-
-  const login = async (emailOrUser: string, pass: string): Promise<AuthResult> => {
-    if (!emailOrUser.trim() || !pass.trim()) {
-      return { success: false, message: 'Username/Email dan Password wajib diisi!' };
-    }
-
-    let resolvedEmail = emailOrUser.trim();
-
-    if (isSupabaseConfigured) {
-      // If input is a username (no @), look up the actual email from profiles
-      if (!emailOrUser.includes('@')) {
-        const { data: foundProfile } = await supabase
-          .from('profiles')
-          .select('id, username, email')
-          .ilike('username', emailOrUser.trim())
-          .single();
-
-        if (foundProfile?.email) {
-          // Use the actual registered email
-          resolvedEmail = foundProfile.email;
-        } else if (foundProfile) {
-          // Fallback: construct email from username pattern
-          resolvedEmail = `${emailOrUser.trim().toLowerCase()}@krtrade.com`;
-        }
-      }
-
-      const { data: authResult, error: authError } = await supabase.auth.signInWithPassword({
-        email: resolvedEmail,
-        password: pass,
-      });
-
-      if (!authError && authResult.session?.user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', authResult.session.user.id)
-          .single();
-
-        if (profile) {
-          const loggedUser: UserProfile = {
-            id: profile.id,
-            fullName: profile.full_name,
-            email: authResult.session.user.email || resolvedEmail,
-            username: profile.username,
-            tradingStyle: profile.trading_style as TradingStyle,
-            isAgreedTamak: profile.accepts_tamak_promise,
-            isAgreedFillaRichest: profile.acknowledges_filla_richest,
-            avatarUrl: profile.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.username}`,
-            bio: profile.bio || 'Trader aktif KRtrade Platform.',
-            initialBalance: profile.initial_balance ? Number(profile.initial_balance) : 10000,
-            accountCurrency: (profile.account_currency as AccountCurrency) || 'USD',
-          };
-          setUser(loggedUser);
-          setIsAuthenticated(true);
-          setStoredUserProfile(loggedUser);
-          localStorage.setItem('krtrade_is_authenticated', 'true');
-          return { success: true, message: 'Login Berhasil! Mengalihkan ke Dashboard...' };
-        }
-      } else if (authError) {
-        return { success: false, message: authError.message || 'Username/Email atau Password salah!' };
+      // Redirect to onboarding if not yet onboarded
+      if (isAuthenticated && session?.user?.isOnboarded === false && pathname !== '/onboarding') {
+        router.push('/onboarding');
       }
     }
+  }, [isAuthenticated, isLoading, pathname, router, session?.user?.isOnboarded]);
 
-    // Direct / Local Registered Authentication Check
-    const registeredList = getRegisteredUsers();
-    const foundAcc = registeredList.find(
-      (u) =>
-        u.username.toLowerCase() === emailOrUser.toLowerCase() ||
-        u.email.toLowerCase() === emailOrUser.toLowerCase()
-    );
+  // ── Auth Actions ─────────────────────────────────────────────────────────
 
-    if (foundAcc) {
-      if (foundAcc.password !== pass) {
-        return { success: false, message: 'Password yang Anda masukkan salah! Silakan periksa kembali.' };
-      }
-
-      setUser(foundAcc.profile);
-      setIsAuthenticated(true);
-      setStoredUserProfile(foundAcc.profile);
-      localStorage.setItem('krtrade_is_authenticated', 'true');
-      return { success: true, message: 'Login Berhasil! Selamat datang kembali.' };
-    }
-
-    // Default Seed Developer Check
-    if (emailOrUser.toLowerCase() === 'khuzaimafilla' || emailOrUser.toLowerCase() === 'khuzaima') {
-      if (pass !== '123456' && pass !== 'khuzaima123') {
-        return { success: false, message: 'Password untuk akun khuzaimafilla salah!' };
-      }
-      const seedUser: UserProfile = {
-        id: 'usr_khuzaima',
-        fullName: 'Khuzaima Filla (Developer)',
-        email: 'khuzaimafilla@krtrade.com',
-        username: 'khuzaimafilla',
-        tradingStyle: 'Scalping',
-        isAgreedTamak: true,
-        isAgreedFillaRichest: true,
-        avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=khuzaimafilla',
-        bio: 'Developer & Creator KRtrade Platform.',
-        initialBalance: 10000,
-        accountCurrency: 'USD',
-      };
-      setUser(seedUser);
-      setIsAuthenticated(true);
-      setStoredUserProfile(seedUser);
-      localStorage.setItem('krtrade_is_authenticated', 'true');
-      return { success: true, message: 'Login Berhasil sebagai Developer!' };
-    }
-
-    return {
-      success: false,
-      message: 'Username atau Email tidak terdaftar! Silakan pilih tab "Daftar Akun Baru".',
-    };
-  };
-
-  const register = async (data: {
-    fullName: string;
-    email: string;
-    username: string;
-    password: string;
-    tradingStyle: TradingStyle;
-    isAgreedTamak: boolean;
-    isAgreedFillaRichest: boolean;
-  }): Promise<AuthResult> => {
-    let authUserId = 'usr_' + Date.now();
-
-    if (isSupabaseConfigured) {
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: data.email,
-        password: data.password,
-      });
-
-      if (authError) {
-        const isRateLimit = authError.message.toLowerCase().includes('rate limit') || authError.status === 429;
-        if (isRateLimit) {
-          console.warn('Supabase email rate limit hit. Seamlessly registering user profile.');
-          // Insert profile into database directly if auth email fails due to quota
-          await supabase.from('profiles').upsert({
-            id: authUserId,
-            username: data.username,
-            full_name: data.fullName,
-            trading_style: data.tradingStyle,
-            accepts_tamak_promise: data.isAgreedTamak,
-            acknowledges_filla_richest: data.isAgreedFillaRichest,
-            avatar_url: `https://api.dicebear.com/7.x/avataaars/svg?seed=${data.username}`,
-          });
-        } else {
-          return { success: false, message: `Gagal Mendaftar: ${authError.message}` };
-        }
-      } else if (authData.user) {
-        authUserId = authData.user.id;
-        await supabase.from('profiles').upsert({
-          id: authUserId,
-          username: data.username,
-          full_name: data.fullName,
-          trading_style: data.tradingStyle,
-          accepts_tamak_promise: data.isAgreedTamak,
-          acknowledges_filla_richest: data.isAgreedFillaRichest,
-          avatar_url: `https://api.dicebear.com/7.x/avataaars/svg?seed=${data.username}`,
-        });
-      }
-    }
-
-    const newUser: UserProfile = {
-      id: authUserId,
-      fullName: data.fullName,
-      email: data.email,
-      username: data.username,
-      tradingStyle: data.tradingStyle,
-      isAgreedTamak: data.isAgreedTamak,
-      isAgreedFillaRichest: data.isAgreedFillaRichest,
-      avatarUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=${data.username}`,
-      bio: 'Trader konsisten KRtrade Platform.',
-      initialBalance: 10000,
-      accountCurrency: 'USD',
-    };
-
-    saveRegisteredUser({
-      email: data.email,
-      username: data.username,
-      password: data.password,
-      profile: newUser,
-    });
-
-    setUser(newUser);
-    setIsAuthenticated(true);
-    setStoredUserProfile(newUser);
-    localStorage.setItem('krtrade_is_authenticated', 'true');
-
-    return { success: true, message: 'Registrasi Berhasil! Mengalihkan ke Dashboard...' };
-  };
-
-  const verifyOtp = async (email: string, token: string): Promise<boolean> => {
-    if (isSupabaseConfigured) {
-      const { error } = await supabase.auth.verifyOtp({
-        email,
-        token,
-        type: 'email',
-      });
-      if (error) {
-        console.error('OTP Verification Error:', error.message);
-        return false;
-      }
-    }
-    return true;
-  };
-
-  const loginWithGoogle = async (): Promise<void> => {
-    if (isSupabaseConfigured) {
-      await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: { redirectTo: `${window.location.origin}/dashboard` },
-      });
-    } else {
-      await login('Filla_GoogleTrader', 'google_oauth_pass');
-    }
+  const loginWithDiscord = async () => {
+    await signIn('discord', { callbackUrl: '/dashboard' });
   };
 
   const logout = async () => {
-    if (isSupabaseConfigured) {
-      await supabase.auth.signOut();
-    }
-    setUser(null);
-    setIsAuthenticated(false);
     localStorage.removeItem('krtrade_is_authenticated');
     localStorage.removeItem('krtrade_user_profile');
-    router.push('/welcome');
+    await signOut({ callbackUrl: '/auth' });
   };
 
   const updateUser = async (profilePartial: Partial<UserProfile>) => {
     if (!user) return;
-    const updated = { ...user, ...profilePartial };
-    setUser(updated);
-    setStoredUserProfile(updated);
-
-    if (isSupabaseConfigured) {
-      await supabase.from('profiles').update({
-        full_name: updated.fullName,
-        username: updated.username,
-        avatar_url: updated.avatarUrl,
-        bio: updated.bio,
-        initial_balance: updated.initialBalance,
-        account_currency: updated.accountCurrency,
-      }).eq('id', user.id);
+    try {
+      const res = await fetch('/api/profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: profilePartial.username,
+          tradingStyle: profilePartial.tradingStyle,
+          initialBalance: profilePartial.initialBalance,
+          accountCurrency: profilePartial.accountCurrency,
+          bio: profilePartial.bio,
+          name: profilePartial.fullName,
+        }),
+      });
+      if (res.ok) {
+        // Force NextAuth session refresh so components re-render with updated data
+        await updateSession();
+      }
+    } catch (err) {
+      console.error('updateUser failed:', err);
     }
+  };
+
+  // ── Legacy stubs (kept for backward compat) ──────────────────────────────
+
+  const login = async (_emailOrUser: string, _pass: string): Promise<AuthResult> => {
+    // Redirect to Discord OAuth
+    await loginWithDiscord();
+    return { success: true, message: 'Mengalihkan ke Discord...' };
+  };
+
+  const register = async (_data: {
+    fullName: string; email: string; username: string; password: string;
+    tradingStyle: TradingStyle; isAgreedTamak: boolean; isAgreedFillaRichest: boolean;
+  }): Promise<AuthResult> => {
+    await loginWithDiscord();
+    return { success: true, message: 'Mengalihkan ke Discord...' };
+  };
+
+  const verifyOtp = async (_email: string, _token: string): Promise<boolean> => true;
+
+  const loginWithGoogle = async () => {
+    await loginWithDiscord();
   };
 
   return (
@@ -392,12 +155,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       value={{
         user,
         isAuthenticated,
+        isLoading,
         login,
+        loginWithDiscord,
+        logout,
+        updateUser,
         register,
         verifyOtp,
         loginWithGoogle,
-        logout,
-        updateUser,
       }}
     >
       {children}
