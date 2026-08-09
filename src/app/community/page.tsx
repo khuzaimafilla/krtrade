@@ -188,15 +188,7 @@ export default function CommunityPage() {
       return filtered;
     });
 
-    if (isSupabaseConfigured) {
-      // 1. Update request status to accepted
-      await supabase.from('group_join_requests').update({ status: 'accepted' }).eq('id', request.id);
-      // 2. Insert into group_members (ignore conflict if already exists)
-      await supabase.from('group_members').upsert({
-        group_id: request.groupId,
-        user_id: request.userId,
-      }, { onConflict: 'group_id,user_id' });
-    }
+
 
 
 
@@ -209,9 +201,7 @@ export default function CommunityPage() {
       return filtered;
     });
 
-    if (isSupabaseConfigured) {
-      supabase.from('group_join_requests').update({ status: 'rejected' }).eq('id', request.id).then();
-    }
+
 
     showToast(`Permintaan dari @${request.username} ditolak.`, 'error');
   };

@@ -4,9 +4,6 @@ import React, { useState, useEffect } from 'react';
 import { useLanguage } from '@/context/LanguageContext';
 import { useAuth } from '@/context/AuthContext';
 import CreatorBadge from '@/components/common/CreatorBadge';
-// Supabase removed — profile view uses localStorage
-const supabase = null as any;
-const isSupabaseConfigured = false;
 import {
   X,
   UserPlus,
@@ -58,25 +55,8 @@ export default function UserProfileModal({
   useEffect(() => {
     if (!isOpen || !user?.id || !currentUser?.id || user.isMe) return;
 
-    // Pre-set from prop
+    // Just rely on the prop for now, or fetch from API if needed
     setFriendStatus(user.isFriend ? 'accepted' : 'none');
-
-    if (!isSupabaseConfigured) return;
-
-    supabase
-      .from('friendships')
-      .select('status')
-      .or(
-        `and(requester_id.eq.${currentUser.id},addressee_id.eq.${user.id}),and(requester_id.eq.${user.id},addressee_id.eq.${currentUser.id})`
-      )
-      .limit(1)
-      .then(({ data }: { data: any }) => {
-        if (data && data.length > 0) {
-          setFriendStatus(data[0].status as FriendStatus);
-        } else {
-          setFriendStatus('none');
-        }
-      });
   }, [isOpen, user, currentUser]);
 
   if (!isOpen || !user) return null;
@@ -88,22 +68,25 @@ export default function UserProfileModal({
     if (!currentUser || !user.id || isAddingFriend) return;
     setIsAddingFriend(true);
 
-    if (isSupabaseConfigured) {
-      const { error } = await supabase.from('friendships').insert({
-        requester_id: currentUser.id,
-        addressee_id: user.id,
-        status: 'accepted', // auto-accept (follow model)
+    try {
+      const res = await fetch('/api/friends', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ targetUserId: user.id }),
       });
-      if (error) {
-        console.error('Friend request error:', error.message);
-        setIsAddingFriend(false);
-        return;
+      
+      if (res.ok) {
+        const data = await res.json();
+        setFriendStatus(data.status.toLowerCase() as FriendStatus);
+        if (onAddFriend) onAddFriend(user.username);
+      } else {
+        console.error('Failed to add friend');
       }
+    } catch (err) {
+      console.error(err);
     }
-
-    setFriendStatus('accepted');
+    
     setIsAddingFriend(false);
-    if (onAddFriend) onAddFriend(user.username);
   };
 
   const pnlFormatted = () => {
