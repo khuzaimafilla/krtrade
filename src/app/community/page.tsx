@@ -30,20 +30,6 @@ interface JoinRequest {
   requestedAt: string;
 }
 
-function getStoredRequests(): JoinRequest[] {
-  if (typeof window === 'undefined') return [];
-  try {
-    return JSON.parse(localStorage.getItem('krtrade_join_requests') || '[]');
-  } catch {
-    return [];
-  }
-}
-
-function saveStoredRequests(requests: JoinRequest[]) {
-  if (typeof window === 'undefined') return;
-  localStorage.setItem('krtrade_join_requests', JSON.stringify(requests));
-}
-
 export default function CommunityPage() {
   const { t } = useLanguage();
   const { user } = useAuth();
@@ -182,7 +168,6 @@ export default function CommunityPage() {
         }
         return g;
       });
-      setStoredGroups(updated);
       
       // Update admin modal using the new groups state
       if (selectedAdminGroup?.id === request.groupId) {
@@ -200,7 +185,6 @@ export default function CommunityPage() {
     // Remove request
     setJoinRequests((prev) => {
       const filtered = prev.filter((r) => r.id !== request.id);
-      saveStoredRequests(filtered);
       return filtered;
     });
 
@@ -222,7 +206,6 @@ export default function CommunityPage() {
   const handleRejectRequest = (request: JoinRequest) => {
     setJoinRequests((prev) => {
       const filtered = prev.filter((r) => r.id !== request.id);
-      saveStoredRequests(filtered);
       return filtered;
     });
 
