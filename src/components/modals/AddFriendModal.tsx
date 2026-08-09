@@ -2,9 +2,6 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
-// Supabase removed — friend search uses localStorage
-const supabase = null as any;
-const isSupabaseConfigured = false;
 import CreatorBadge from '@/components/common/CreatorBadge';
 import UserProfileModal, { PublicUserProfile } from '@/components/modals/UserProfileModal';
 import { Search, UserPlus, X, ShieldCheck, UserCheck, Eye, Clock } from 'lucide-react';
@@ -31,26 +28,25 @@ export default function AddFriendModal({ isOpen, onClose, onFriendAdded }: AddFr
 
   // Load existing friendships to know status per user
   const loadFriendshipStatuses = useCallback(async (userIds: string[]) => {
-    if (!isSupabaseConfigured || !user?.id || userIds.length === 0) return;
+    if (!user?.id || userIds.length === 0) return;
 
-    const { data } = await supabase
-      .from('friendships')
-      .select('requester_id, addressee_id, status')
-      .or(`requester_id.eq.${user.id},addressee_id.eq.${user.id}`);
+    try {
+      const res = await fetch('/api/friends');
+      if (res.ok) {
+        const data = await res.json();
+        const map: FriendshipStatusMap = {};
+        userIds.forEach((uid) => { map[uid] = 'none'; });
 
-    if (!data) return;
-
-    const map: FriendshipStatusMap = {};
-    userIds.forEach((uid) => { map[uid] = 'none'; });
-
-    data.forEach((f: any) => {
-      const otherId = f.requester_id === user.id ? f.addressee_id : f.requester_id;
-      if (map[otherId] !== undefined || userIds.includes(otherId)) {
-        map[otherId] = f.status as 'pending' | 'accepted';
+        data.friends.forEach((f: any) => {
+          if (map[f.id] !== undefined || userIds.includes(f.id)) {
+            map[f.id] = f.status.toLowerCase() as 'pending' | 'accepted';
+          }
+        });
+        setFriendshipMap(map);
       }
-    });
-
-    setFriendshipMap(map);
+    } catch (err) {
+      console.error(err);
+    }
   }, [user]);
 
   // Live search with debounce
@@ -60,18 +56,17 @@ export default function AddFriendModal({ isOpen, onClose, onFriendAdded }: AddFr
 
     const executeSearch = async () => {
       setIsSearching(true);
-      if (isSupabaseConfigured) {
-        let req = supabase.from('profiles').select('id, username, full_name, avatar_url, trading_style, bio').limit(15);
-        if (query) req = req.or(`username.ilike.%${query}%,full_name.ilike.%${query}%`);
-        if (user?.id) req = req.neq('id', user.id);
-
-        const { data, error } = await req;
-        if (!error && data) {
-          setSearchResults(data);
-          loadFriendshipStatuses(data.map((u: any) => u.id));
+      try {
+        const res = await fetch(`/api/users/search?q=${encodeURIComponent(query)}`);
+        if (res.ok) {
+          const data = await res.json();
+          setSearchResults(data.users || []);
+          loadFriendshipStatuses(data.users?.map((u: any) => u.id) || []);
         } else {
           setSearchResults([]);
         }
+      } catch (err) {
+        setSearchResults([]);
       }
       setIsSearching(false);
     };
@@ -98,56 +93,33 @@ export default function AddFriendModal({ isOpen, onClose, onFriendAdded }: AddFr
     if (friendshipMap[targetUser.id] && friendshipMap[targetUser.id] !== 'none') return;
 
     // Optimistic update
-    setFriendshipMap((prev) => ({ ...prev, [targetUser.id]: 'accepted' }));
+    setFriendshipMap((prev) => ({ ...prev, [targetUser.id]: 'pending' }));
 
-    if (isSupabaseConfigured) {
-      const { error } = await supabase.from('friendships').insert({
-        requester_id: user.id,
-        addressee_id: targetUser.id,
-        status: 'accepted', // auto-accept (follow model)
+    try {
+      const res = await fetch('/api/friends', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ targetUserId: targetUser.id })
       });
-      if (error) {
-        console.error('Add friend error:', error.message);
-        // Rollback on error
+      if (res.ok) {
+        const data = await res.json();
+        setStatusMsg(data.status === 'ACCEPTED' ? `✅ Berhasil berteman dengan @${targetUser.username}!` : `⏳ Permintaan pertemanan dikirim ke @${targetUser.username}`);
+        setFriendshipMap((prev) => ({ ...prev, [targetUser.id]: data.status.toLowerCase() }));
+        if (onFriendAdded) onFriendAdded();
+      } else {
+        const errData = await res.json();
+        setStatusMsg(`Gagal: ${errData.error}`);
         setFriendshipMap((prev) => ({ ...prev, [targetUser.id]: 'none' }));
-        setStatusMsg(`Gagal: ${error.message.includes('duplicate') ? 'Sudah berteman/pernah mengirim request.' : error.message}`);
-        return;
       }
+    } catch (err) {
+      setStatusMsg('Gagal mengirim permintaan');
+      setFriendshipMap((prev) => ({ ...prev, [targetUser.id]: 'none' }));
     }
 
-    setStatusMsg(`✅ Berhasil berteman dengan @${targetUser.username}!`);
-    if (onFriendAdded) onFriendAdded();
     setTimeout(() => setStatusMsg(''), 3000);
   };
 
   const handleOpenPreview = async (targetUser: any) => {
-    // Fetch real stats from DB
-    let winRate = 0, totalPnl = 0, totalTrades = 0, groups: PublicUserProfile['groups'] = [];
-
-    if (isSupabaseConfigured) {
-      const [tradesRes, groupsRes] = await Promise.all([
-        supabase.from('trades').select('pnl').eq('user_id', targetUser.id),
-        supabase
-          .from('group_members')
-          .select('group_id, groups(id, name, code)')
-          .eq('user_id', targetUser.id),
-      ]);
-
-      if (tradesRes.data) {
-        const trades = tradesRes.data;
-        totalTrades = trades.length;
-        totalPnl = trades.reduce((sum: number, t: any) => sum + Number(t.pnl || 0), 0);
-        const wins = trades.filter((t: any) => Number(t.pnl) > 0).length;
-        winRate = totalTrades > 0 ? Math.round((wins / totalTrades) * 100) : 0;
-      }
-
-      if (groupsRes.data) {
-        groups = groupsRes.data
-          .filter((r: any) => r.groups)
-          .map((r: any) => ({ id: r.groups.id, name: r.groups.name, code: r.groups.code }));
-      }
-    }
-
     setSelectedUserProfile({
       id: targetUser.id,
       username: targetUser.username,
@@ -155,11 +127,11 @@ export default function AddFriendModal({ isOpen, onClose, onFriendAdded }: AddFr
       avatarUrl: targetUser.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${targetUser.username}`,
       tradingStyle: targetUser.trading_style || 'Scalping',
       bio: targetUser.bio || 'Trader aktif KRTrade Platform.',
-      winRate,
-      totalPnl,
-      totalTrades,
+      winRate: 0,
+      totalPnl: 0,
+      totalTrades: 0,
       isFriend: friendshipMap[targetUser.id] === 'accepted',
-      groups,
+      groups: [],
     });
     setIsPreviewOpen(true);
   };

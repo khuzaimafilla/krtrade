@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { auth } from '@/auth';
 import { LeaderboardEntry } from '@/types';
 
 export const dynamic = 'force-dynamic';
@@ -33,6 +34,34 @@ export async function GET() {
       return acc;
     }, {} as Record<string, { pnl: number }[]>);
 
+    const session = await auth();
+    let myFriendIds = new Set<string>();
+    let myGroupIds = new Set<string>();
+    let userGroupsMap: Record<string, string[]> = {};
+
+    if (session?.user?.id) {
+      const myId = session.user.id;
+      // Ambil pertemanan yang sudah ACCEPTED
+      const friendships = await prisma.friendship.findMany({
+        where: {
+          OR: [{ requesterId: myId }, { addresseeId: myId }],
+          status: 'ACCEPTED'
+        }
+      });
+      friendships.forEach(f => {
+        myFriendIds.add(f.requesterId === myId ? f.addresseeId : f.requesterId);
+      });
+    }
+
+    // Ambil semua keanggotaan grup untuk semua user agar tab Community berfungsi
+    const allMemberships = await prisma.groupMember.findMany({
+      select: { userId: true, groupId: true }
+    });
+    allMemberships.forEach(m => {
+      if (!userGroupsMap[m.userId]) userGroupsMap[m.userId] = [];
+      userGroupsMap[m.userId].push(m.groupId);
+    });
+
     // 4. Calculate stats for each user
     const entries: LeaderboardEntry[] = users.map((u) => {
       const userTrades = tradesByUser[u.id] || [];
@@ -41,7 +70,6 @@ export async function GET() {
       const winRate = totalTrades > 0 ? Math.round((wins / totalTrades) * 100) : 0;
       const totalPnl = userTrades.reduce((sum, t) => sum + t.pnl, 0);
 
-      // We don't have friends/groups system in Prisma right now, so default to empty
       return {
         id: u.id,
         rank: 0,
@@ -54,9 +82,9 @@ export async function GET() {
         winRate,
         returnPercentage: 0,
         totalPnl,
-        isFriend: false,
+        isFriend: myFriendIds.has(u.id),
         isMe: false, // will be evaluated on the client
-        groupIds: [],
+        groupIds: userGroupsMap[u.id] || [],
       };
     });
 

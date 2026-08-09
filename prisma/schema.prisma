@@ -69,6 +69,12 @@ model User {
   accounts        Account[]
   sessions        Session[]
   trades          Trade[]
+
+  // New Relationships for Community and Friends
+  groupsCreated   Group[]       @relation("GroupCreator")
+  groupMemberships GroupMember[]
+  friendships     Friendship[]  @relation("UserFriends")
+  friendshipsOf   Friendship[]  @relation("UserFriendsOf")
 }
 
 // ── Trading Journal ───────────────────────────────────────────────────────────
@@ -96,4 +102,54 @@ model Trade {
 
   @@index([userId])
   @@index([createdAt])
+}
+
+// ── Community / Trading Groups ────────────────────────────────────────────────
+
+model Group {
+  id          String   @id @default(cuid())
+  name        String
+  code        String   @unique
+  description String?
+  createdBy   String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  creator     User          @relation("GroupCreator", fields: [createdBy], references: [id], onDelete: Cascade)
+  members     GroupMember[]
+
+  @@index([createdBy])
+}
+
+model GroupMember {
+  id        String   @id @default(cuid())
+  groupId   String
+  userId    String
+  role      String   @default("MEMBER") // "ADMIN" | "MEMBER"
+  joinedAt  DateTime @default(now())
+
+  group     Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, userId])
+  @@index([groupId])
+  @@index([userId])
+}
+
+// ── Friendships ───────────────────────────────────────────────────────────────
+
+model Friendship {
+  id          String   @id @default(cuid())
+  requesterId String
+  addresseeId String
+  status      String   @default("PENDING") // "PENDING" | "ACCEPTED"
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  requester   User     @relation("UserFriends", fields: [requesterId], references: [id], onDelete: Cascade)
+  addressee   User     @relation("UserFriendsOf", fields: [addresseeId], references: [id], onDelete: Cascade)
+
+  @@unique([requesterId, addresseeId])
+  @@index([requesterId])
+  @@index([addresseeId])
 }

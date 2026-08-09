@@ -4,10 +4,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { TradingGroup, GroupMemberDetail } from '@/types';
 import { useLanguage } from '@/context/LanguageContext';
 import { useAuth } from '@/context/AuthContext';
-import { getStoredGroups, setStoredGroups } from '@/lib/storage';
-// Supabase removed — community features use localStorage
-const supabase = null as any;
-const isSupabaseConfigured = false;
 import CreatorBadge from '@/components/common/CreatorBadge';
 import {
   Users,
@@ -79,234 +75,54 @@ export default function CommunityPage() {
 
   // ── Core data loader (extracted so Realtime can re-call it) ──────────────
   const loadGroups = useCallback(async () => {
-    let storedLocal = getStoredGroups();
-    
-    // Hapus data dummy sample lama dari local storage (jika masih tersangkut)
-    const dummyIds = ['grp_1', 'grp_2', 'grp_3', 'grp_4'];
-    const hasDummy = storedLocal.some(g => dummyIds.includes(g.id));
-    if (hasDummy) {
-      storedLocal = storedLocal.filter(g => !dummyIds.includes(g.id));
-      setStoredGroups(storedLocal); // update clean local storage
-    }
-
-    const requests = getStoredRequests();
-
-    const userJoinedKey = user ? `krtrade_joined_${user.id}` : 'krtrade_joined_guest';
-    const userJoinedSet = new Set<string>();
-    if (typeof window !== 'undefined') {
-      const storedJoined = localStorage.getItem(userJoinedKey);
-      if (storedJoined) {
-        try {
-          JSON.parse(storedJoined).forEach((id: string) => userJoinedSet.add(id));
-        } catch {}
+    try {
+      const res = await fetch('/api/community');
+      if (res.ok) {
+        const data = await res.json();
+        setGroups(data.groups);
       }
+    } catch (err) {
+      console.error('Error loading DB groups:', err);
     }
+  }, []);
 
-    let finalGroups: TradingGroup[] = storedLocal.map((g) => {
-      const isCreatedByMe = user && g.createdBy === user.id;
-      const isUserJoined = isCreatedByMe || userJoinedSet.has(g.id);
-      const realMembersCount = g.members?.length || (isUserJoined ? 1 : 0);
-      return {
-        ...g,
-        isJoined: isUserJoined,
-        membersCount: realMembersCount,
-      };
-    });
-
-    if (isSupabaseConfigured && user) {
-      try {
-        const { data: dbGroups, error } = await supabase.from('groups').select('*');
-        if (!error && dbGroups && dbGroups.length > 0) {
-          const { data: myMemberships } = await supabase
-            .from('group_members')
-            .select('group_id')
-            .eq('user_id', user.id);
-
-          const joinedGroupIds = new Set(myMemberships?.map((m: any) => m.group_id));
-
-          const mappedDb: TradingGroup[] = await Promise.all(
-            dbGroups.map(async (g: any) => {
-              const isMine = g.created_by === user.id;
-              const isJoined = isMine || joinedGroupIds.has(g.id) || userJoinedSet.has(g.id);
-
-              const { count } = await supabase
-                .from('group_members')
-                .select('*', { count: 'exact', head: true })
-                .eq('group_id', g.id);
-
-              const { data: memberRows } = await supabase
-                .from('group_members')
-                .select('user_id')
-                .eq('group_id', g.id);
-
-              const memberDetails: GroupMemberDetail[] = [];
-              if (memberRows) {
-                for (const row of memberRows) {
-                  const { data: prof } = await supabase
-                    .from('profiles')
-                    .select('id, username, full_name, avatar_url')
-                    .eq('id', row.user_id)
-                    .single();
-                  if (prof) {
-                    memberDetails.push({
-                      id: prof.id,
-                      username: prof.username,
-                      fullName: prof.full_name || prof.username,
-                      avatarUrl: prof.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${prof.username}`,
-                      role: g.created_by === prof.id ? 'admin' : 'member',
-                    });
-                  }
-                }
-              }
-
-              return {
-                id: g.id,
-                name: g.name,
-                code: g.code,
-                description: g.description || 'Komunitas Trading Kolaboratif KRTrade Platform.',
-                membersCount: count || memberDetails.length || 1,
-                totalPnl: 0,
-                winRate: 0,
-                isJoined,
-                createdBy: g.created_by,
-                members: memberDetails,
-              };
-            })
-          );
-
-          const dbCodes = new Set(mappedDb.map((g) => g.code));
-          const extraLocal = finalGroups.filter((g) => !dbCodes.has(g.code));
-          finalGroups = [...mappedDb, ...extraLocal];
-        }
-
-        // Fetch real pending join requests for groups I'm admin of
-        const myAdminGroups = dbGroups?.filter((g: any) => g.created_by === user.id).map((g: any) => g.id) || [];
-        if (myAdminGroups.length > 0) {
-          const { data: dbRequests } = await supabase
-            .from('group_join_requests')
-            .select('id, group_id, user_id, status, created_at, profiles(username, full_name, avatar_url)')
-            .in('group_id', myAdminGroups)
-            .eq('status', 'pending');
-
-          const mappedRequests: JoinRequest[] = (dbRequests || []).map((r: any) => ({
-            id: r.id,
-            groupId: r.group_id,
-            userId: r.user_id,
-            username: r.profiles?.username || 'user',
-            fullName: r.profiles?.full_name || 'User',
-            avatarUrl: r.profiles?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${r.profiles?.username}`,
-            requestedAt: r.created_at,
-          }));
-
-          const dbGroupIdSet = new Set(myAdminGroups);
-          const nonAdminLocalRequests = requests.filter(r => !dbGroupIdSet.has(r.groupId));
-          setJoinRequests([...mappedRequests, ...nonAdminLocalRequests]);
-          saveStoredRequests([...mappedRequests, ...nonAdminLocalRequests]);
-        } else {
-          setJoinRequests(requests);
-        }
-
-      } catch (err) {
-        console.error('Error loading DB groups or requests:', err);
-      }
-    } else {
-      setJoinRequests(requests);
-    }
-
-    setGroups(finalGroups);
-  }, [user]);
-
-  // ── Initial load + Supabase Realtime subscriptions ───────────────────────
   useEffect(() => {
     loadGroups();
-
-    if (!isSupabaseConfigured || !user) return;
-
-    const channel = supabase
-      .channel(`community-rt-${user.id}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'groups' }, () => {
-        loadGroups();
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'group_members' }, () => {
-        loadGroups();
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'group_join_requests' }, () => {
-        loadGroups();
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [user, loadGroups]);
+  }, [loadGroups]);
 
   const saveGroups = (updated: TradingGroup[]) => {
-    setStoredGroups(updated);
+    setGroups(updated);
   };
 
   const handleCreateGroup = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newGroupName || !newGroupCode) return;
+    if (!newGroupName) return;
 
-    const groupAdminId = user?.id || 'usr_khuzaima';
+    try {
+      const res = await fetch('/api/community', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: newGroupName,
+          description: newGroupDesc
+        })
+      });
 
-    let newGroupId = 'grp_' + Date.now();
-
-    if (isSupabaseConfigured && user) {
-      const { data: newGrpData, error } = await supabase.from('groups').insert({
-        name: newGroupName,
-        code: newGroupCode.toUpperCase(),
-        description: newGroupDesc || 'Komunitas Trading Kolaboratif KRTrade Platform.',
-        created_by: groupAdminId,
-      }).select().single();
-
-      if (!error && newGrpData) {
-        newGroupId = newGrpData.id;
-        await supabase.from('group_members').insert({
-          group_id: newGroupId,
-          user_id: groupAdminId,
-        });
+      if (res.ok) {
+        showToast(`Grup "${newGroupName}" berhasil dibuat! Anda otomatis menjadi Admin.`);
+        loadGroups();
+      } else {
+        const errorData = await res.json();
+        showToast(errorData.error || 'Gagal membuat grup', 'error');
       }
+    } catch (err) {
+      showToast('Gagal membuat grup', 'error');
     }
 
-    // Admin is automatically a member
-    const adminMember: GroupMemberDetail = {
-      id: groupAdminId,
-      username: user?.username || 'admin',
-      fullName: user?.fullName || 'Admin',
-      avatarUrl: user?.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.username || 'admin'}`,
-      role: 'admin',
-      joinedAt: new Date().toISOString(),
-    };
-
-    const newGrp: TradingGroup = {
-      id: newGroupId,
-      name: newGroupName,
-      code: newGroupCode.toUpperCase(),
-      description: newGroupDesc || 'Komunitas Trading Kolaboratif KRTrade Platform.',
-      membersCount: 1,
-      totalPnl: 0,
-      winRate: 0,
-      isJoined: true,
-      createdBy: groupAdminId,
-      members: [adminMember],
-    };
-
-    // Save joined state
-    const userJoinedKey = user ? `krtrade_joined_${user.id}` : 'krtrade_joined_guest';
-    const currentJoined = JSON.parse(localStorage.getItem(userJoinedKey) || '[]');
-    localStorage.setItem(userJoinedKey, JSON.stringify([...new Set([...currentJoined, newGroupId])]));
-
-    setGroups((prevGroups) => {
-      const updated = [newGrp, ...prevGroups];
-      setStoredGroups(updated);
-      return updated;
-    });
     setIsCreateOpen(false);
     setNewGroupName('');
     setNewGroupCode('');
     setNewGroupDesc('');
-    showToast(`Grup "${newGroupName}" berhasil dibuat! Anda otomatis menjadi Admin.`);
   };
 
   const handleRequestJoin = async (e: React.FormEvent) => {
@@ -314,56 +130,30 @@ export default function CommunityPage() {
     if (!joinCodeInput) return;
 
     const code = joinCodeInput.trim().toUpperCase();
-    const targetGroup = groups.find((g) => g.code === code);
 
-    if (!targetGroup) {
-      setJoinMessage('Kode komunitas tidak ditemukan. Pastikan kode yang dimasukkan benar.');
-      return;
-    }
-
-    if (targetGroup.isJoined) {
-      setJoinMessage('Anda sudah tergabung dalam komunitas ini.');
-      return;
-    }
-
-    // Check if already requested
-    const alreadyRequested = joinRequests.some(
-      (r) => r.groupId === targetGroup.id && r.userId === user?.id
-    );
-    if (alreadyRequested) {
-      setJoinMessage('Permintaan bergabung sudah dikirim. Menunggu persetujuan Admin.');
-      return;
-    }
-
-    // Create join request
-    const request: JoinRequest = {
-      id: 'req_' + Date.now(),
-      groupId: targetGroup.id,
-      userId: user?.id || 'guest',
-      username: user?.username || 'Guest',
-      fullName: user?.fullName || 'Guest User',
-      avatarUrl: user?.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.username}`,
-      requestedAt: new Date().toISOString(),
-    };
-
-    setJoinRequests((prev) => {
-      const updated = [...prev, request];
-      saveStoredRequests(updated);
-      return updated;
-    });
-
-    if (isSupabaseConfigured && user) {
-      await supabase.from('group_join_requests').insert({
-        group_id: targetGroup.id,
-        user_id: user.id,
-        status: 'pending',
+    try {
+      const res = await fetch('/api/community/join', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code })
       });
+
+      if (res.ok) {
+        showToast('Berhasil bergabung dengan komunitas!');
+        loadGroups();
+      } else {
+        const errorData = await res.json();
+        setJoinMessage(errorData.error || 'Gagal bergabung.');
+        return;
+      }
+    } catch (err) {
+      setJoinMessage('Gagal bergabung.');
+      return;
     }
 
     setIsJoinOpen(false);
     setJoinCodeInput('');
     setJoinMessage('');
-    showToast(`Permintaan bergabung ke "${targetGroup.name}" telah dikirim! Menunggu persetujuan Admin.`, 'info');
   };
 
   const handleAcceptRequest = async (request: JoinRequest) => {
