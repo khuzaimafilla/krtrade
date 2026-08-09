@@ -49,7 +49,7 @@ export async function GET() {
         totalPnl: 0,
         winRate: 0,
         isJoined,
-        createdBy: g.creator.username || g.createdBy,
+        createdBy: g.createdBy,
         members: g.members.map(m => ({
           id: m.user.id,
           username: m.user.username || '',
